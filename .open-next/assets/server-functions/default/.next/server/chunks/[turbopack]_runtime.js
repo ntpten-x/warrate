@@ -638,7 +638,7 @@ externalRequire.resolve = (id, options)=>{
     return require.resolve(id, options);
 };
 contextPrototype.x = externalRequire;
-/* eslint-disable @typescript-eslint/no-unused-vars */ const path = require('node:path');
+/* eslint-disable @typescript-eslint/no-unused-vars */ const path = require('path');
 const relativePathToRuntimeRoot = path.relative(RUNTIME_PUBLIC_PATH, '.');
 // Compute the relative path to the `distDir`.
 const relativePathToDistRoot = path.join(relativePathToRuntimeRoot, RELATIVE_ROOT_PATH);
@@ -661,8 +661,8 @@ const ABSOLUTE_ROOT = path.resolve(__filename, relativePathToDistRoot);
 Context.prototype.P = resolveAbsolutePath;
 /* eslint-disable @typescript-eslint/no-unused-vars */ /// <reference path="../shared/runtime/runtime-utils.ts" />
 function readWebAssemblyAsResponse(path) {
-    const { createReadStream } = require('node:fs');
-    const { Readable } = require('node:stream');
+    const { createReadStream } = require('fs');
+    const { Readable } = require('stream');
     const stream = createReadStream(path);
     // @ts-ignore unfortunately there's a slight type mismatch with the stream.
     return new Response(Readable.toWeb(stream), {
@@ -689,7 +689,7 @@ async function instantiateWebAssemblyFromPath(path, importsObj) {
  * Base Node.js runtime shared between production and development.
  * Contains chunk loading, module caching, and other non-HMR functionality.
  */ process.env.TURBOPACK = '1';
-const url = require('node:url');
+const url = require('url');
 const moduleFactories = new Map();
 const moduleCache = Object.create(null);
 /**
