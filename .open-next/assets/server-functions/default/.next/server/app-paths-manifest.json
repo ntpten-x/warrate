@@ -1,0 +1,21 @@
+{
+  "/_global-error/page": "app/_global-error/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/categories/route": "app/api/categories/route.js",
+  "/api/items/route": "app/api/items/route.js",
+  "/api/manage-items/route": "app/api/manage-items/route.js",
+  "/api/overview/route": "app/api/overview/route.js",
+  "/api/pageviews/route": "app/api/pageviews/route.js",
+  "/api/prices/route": "app/api/prices/route.js",
+  "/api/trending/click/route": "app/api/trending/click/route.js",
+  "/api/trending/route": "app/api/trending/route.js",
+  "/api/units/route": "app/api/units/route.js",
+  "/categories/page": "app/categories/page.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/icon.png/route": "app/icon.png/route.js",
+  "/items/page": "app/items/page.js",
+  "/login/page": "app/login/page.js",
+  "/page": "app/page.js",
+  "/prices/page": "app/prices/page.js",
+  "/units/page": "app/units/page.js"
+}
