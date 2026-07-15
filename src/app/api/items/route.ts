@@ -3,7 +3,6 @@ import { initDatabase } from "@/lib/db";
 import { MarketItem } from "@/entities/MarketItem";
 import { handleApiError } from "@/lib/error";
 
-export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {

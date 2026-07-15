@@ -2,8 +2,6 @@ import { NextResponse, NextRequest } from "next/server";
 import { redis } from "@/lib/redis";
 import { handleApiError } from "@/lib/error";
 
-export const runtime = "edge";
-
 export async function POST(req: NextRequest) {
   try {
     const { itemId } = await req.json();

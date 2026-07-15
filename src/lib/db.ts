@@ -11,18 +11,6 @@ declare global {
   var dbInitPromise: Promise<DataSource> | undefined;
 }
 
-const AppDataSource = new DataSource({
-  type: "postgres",
-  url: process.env.DATABASE_URL,
-  synchronize: process.env.NODE_ENV !== "production", // Automatically synchronize schema only in dev
-  logging: false,
-  entities: [MarketItem, Item, Category, Price, Unit],
-  extra: {
-    max: 40, // Maximum connections in pool (good for high concurrency)
-    idleTimeoutMillis: 30000,
-  },
-});
-
 export async function initDatabase() {
   if (globalThis.dbDataSource) {
     // Check if Next.js hot-reload (HMR) has loaded new entity class constructors
@@ -73,7 +61,7 @@ export async function initDatabase() {
   if (!globalThis.dbDataSource) {
     globalThis.dbDataSource = new DataSource({
       type: "postgres",
-      url: process.env.DATABASE_URL,
+      url: process.env.DATABASE_URL || "postgres://localhost:5432/db",
       synchronize: process.env.NODE_ENV !== "production",
       logging: false,
       entities: [MarketItem, Item, Category, Price, Unit],

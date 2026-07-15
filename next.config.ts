@@ -14,6 +14,20 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      "expo-sqlite": false,
+      "react-native-sqlite-storage": false,
+    };
+    return config;
+  },
+  turbopack: {
+    resolveAlias: {
+      "expo-sqlite": "./src/lib/empty.ts",
+      "react-native-sqlite-storage": "./src/lib/empty.ts",
+    },
+  } as any,
 };
 
 export default nextConfig;

@@ -5,7 +5,6 @@ import { Category } from "@/entities/Category";
 import { handleApiError, AppError, verifyAuth } from "@/lib/error";
 import { ILike } from "typeorm";
 
-export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
