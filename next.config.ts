@@ -28,6 +28,12 @@ const nextConfig: NextConfig = {
       "react-native-sqlite-storage": "./src/lib/empty.ts",
     },
   } as any,
+  outputFileTracingIncludes: {
+    "**/*": [
+      "./node_modules/pg-cloudflare/**/*",
+      "./node_modules/expo-sqlite/**/*"
+    ]
+  },
 };
 
 export default nextConfig;
