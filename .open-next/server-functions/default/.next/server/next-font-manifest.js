@@ -1,1 +1,28 @@
-self.__NEXT_FONT_MANIFEST="{\n  \"app\": {\n    \"[project]/src/app/_not-found/page\": [\n      \"static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2\"\n    ],\n    \"[project]/src/app/categories/page\": [\n      \"static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2\"\n    ],\n    \"[project]/src/app/items/page\": [\n      \"static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2\"\n    ],\n    \"[project]/src/app/login/page\": [\n      \"static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2\"\n    ],\n    \"[project]/src/app/page\": [\n      \"static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2\"\n    ],\n    \"[project]/src/app/prices/page\": [\n      \"static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2\"\n    ],\n    \"[project]/src/app/units/page\": [\n      \"static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2\"\n    ]\n  },\n  \"appUsingSizeAdjust\": true,\n  \"pages\": {},\n  \"pagesUsingSizeAdjust\": false\n}"
+"use strict";self.__NEXT_FONT_MANIFEST=`{
+  "app": {
+    "[project]/src/app/_not-found/page": [
+      "static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2"
+    ],
+    "[project]/src/app/categories/page": [
+      "static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2"
+    ],
+    "[project]/src/app/items/page": [
+      "static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2"
+    ],
+    "[project]/src/app/login/page": [
+      "static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2"
+    ],
+    "[project]/src/app/page": [
+      "static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2"
+    ],
+    "[project]/src/app/prices/page": [
+      "static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2"
+    ],
+    "[project]/src/app/units/page": [
+      "static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2"
+    ]
+  },
+  "appUsingSizeAdjust": true,
+  "pages": {},
+  "pagesUsingSizeAdjust": false
+}`;

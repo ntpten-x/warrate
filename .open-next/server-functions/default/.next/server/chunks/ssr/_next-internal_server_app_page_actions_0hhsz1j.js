@@ -1,3 +1,1 @@
-module.exports=[349901,(a,b,c)=>{}];
-
-//# sourceMappingURL=_next-internal_server_app_page_actions_0hhsz1j.js.map
+"use strict";module.exports=[349901,(e,o,a)=>{}];

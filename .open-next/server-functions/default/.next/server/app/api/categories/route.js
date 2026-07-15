@@ -1,8 +1,1 @@
-var R=require("../../../chunks/[turbopack]_runtime.js")("server/app/api/categories/route.js")
-R.c("server/chunks/[root-of-the-server]__097z331._.js")
-R.c("server/chunks/[root-of-the-server]__1xyw3ko._.js")
-R.c("server/chunks/_0ga4h2a._.js")
-R.c("server/chunks/[root-of-the-server]__1gwwrwu._.js")
-R.c("server/chunks/_next-internal_server_app_api_categories_route_actions_195-y1x.js")
-R.m(913946)
-module.exports=R.m(913946).exports
+"use strict";var R=require("../../../chunks/[turbopack]_runtime.js")("server/app/api/categories/route.js");R.c("server/chunks/[root-of-the-server]__097z331._.js"),R.c("server/chunks/[root-of-the-server]__1xyw3ko._.js"),R.c("server/chunks/_0ga4h2a._.js"),R.c("server/chunks/[root-of-the-server]__1gwwrwu._.js"),R.c("server/chunks/_next-internal_server_app_api_categories_route_actions_195-y1x.js"),R.m(913946),module.exports=R.m(913946).exports;

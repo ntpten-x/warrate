@@ -1,3 +1,1 @@
-module.exports=[299548,(e,o,d)=>{}];
-
-//# sourceMappingURL=_next-internal_server_app_api_overview_route_actions_0jni-j7.js.map
+"use strict";module.exports=[299548,(e,o,d)=>{}];

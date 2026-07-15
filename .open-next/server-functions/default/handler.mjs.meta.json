@@ -5789,7 +5789,7 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/open-next.config.mjs": {
-      "bytes": 6946,
+      "bytes": 6972,
       "imports": [],
       "format": "esm"
     },
@@ -7275,13 +7275,13 @@
           "bytesInOutput": 27891
         },
         ".open-next/server-functions/default/open-next.config.mjs": {
-          "bytesInOutput": 5157
+          "bytesInOutput": 5172
         },
         ".open-next/server-functions/default/index.mjs": {
           "bytesInOutput": 62411
         }
       },
-      "bytes": 2089780
+      "bytes": 2089795
     }
   }
 }

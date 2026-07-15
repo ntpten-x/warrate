@@ -1,14 +1,1 @@
-var R=require("../chunks/ssr/[turbopack]_runtime.js")("server/app/page.js")
-R.c("server/chunks/ssr/[root-of-the-server]__0kvcny2._.js")
-R.c("server/chunks/ssr/node_modules_09r9c10._.js")
-R.c("server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_1j5af0j.js")
-R.c("server/chunks/ssr/[root-of-the-server]__0bbeyue._.js")
-R.c("server/chunks/ssr/node_modules_next_dist_172hvm-._.js")
-R.c("server/chunks/ssr/[root-of-the-server]__0w8rv87._.js")
-R.c("server/chunks/ssr/src_app_not-found_tsx_0xltofl._.js")
-R.c("server/chunks/ssr/node_modules_next_dist_client_components_0p8s4lh._.js")
-R.c("server/chunks/ssr/node_modules_next_dist_client_components_builtin_unauthorized_0l_sp0x.js")
-R.c("server/chunks/ssr/node_modules_next_dist_client_components_builtin_global-error_0-o-goa.js")
-R.c("server/chunks/ssr/_next-internal_server_app_page_actions_0hhsz1j.js")
-R.m(351676)
-module.exports=R.m(351676).exports
+"use strict";var R=require("../chunks/ssr/[turbopack]_runtime.js")("server/app/page.js");R.c("server/chunks/ssr/[root-of-the-server]__0kvcny2._.js"),R.c("server/chunks/ssr/node_modules_09r9c10._.js"),R.c("server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_1j5af0j.js"),R.c("server/chunks/ssr/[root-of-the-server]__0bbeyue._.js"),R.c("server/chunks/ssr/node_modules_next_dist_172hvm-._.js"),R.c("server/chunks/ssr/[root-of-the-server]__0w8rv87._.js"),R.c("server/chunks/ssr/src_app_not-found_tsx_0xltofl._.js"),R.c("server/chunks/ssr/node_modules_next_dist_client_components_0p8s4lh._.js"),R.c("server/chunks/ssr/node_modules_next_dist_client_components_builtin_unauthorized_0l_sp0x.js"),R.c("server/chunks/ssr/node_modules_next_dist_client_components_builtin_global-error_0-o-goa.js"),R.c("server/chunks/ssr/_next-internal_server_app_page_actions_0hhsz1j.js"),R.m(351676),module.exports=R.m(351676).exports;

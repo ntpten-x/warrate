@@ -10,7 +10,9 @@ let workerContent = fs.readFileSync(path.join(srcDir, 'worker.js'), 'utf8');
 workerContent = workerContent.replace(/(["'])\.\//g, '$1../');
 fs.writeFileSync(path.join(destDir, '_worker.js'), workerContent, 'utf8');
 
-// 2. Rewrite require("fs") to require("node:fs") in server-functions (where handler.mjs and file-logger.js are)
+// 2. Rewrite require("fs") to require("node:fs") in server-functions and MINIFY
+const esbuild = require('esbuild');
+
 function rewriteNodeImports(dir) {
   if (!fs.existsSync(dir)) return;
   const files = fs.readdirSync(dir);
@@ -31,8 +33,38 @@ function rewriteNodeImports(dir) {
           changed = true;
         }
       }
+      
+      // Replace pg with pg-cloudflare to reduce bundle size and use Edge-compatible driver
+      if (content.includes('require("pg")') || content.includes("require('pg')")) {
+        content = content.replaceAll('require("pg")', 'require("pg-cloudflare")');
+        content = content.replaceAll("require('pg')", "require('pg-cloudflare')");
+        changed = true;
+      }
+      
+      // Also prevent large unused drivers in TypeORM from being bundled
+      const unusedDrivers = ['mysql', 'mysql2', 'oracledb', 'mssql', 'sqlite3', 'sql.js', 'react-native-sqlite-storage', 'expo-sqlite'];
+      for (const driver of unusedDrivers) {
+        if (content.includes(`require("${driver}")`) || content.includes(`require('${driver}')`)) {
+          content = content.replaceAll(`require("${driver}")`, 'undefined');
+          content = content.replaceAll(`require('${driver}')`, 'undefined');
+          changed = true;
+        }
+      }
       if (changed) {
         fs.writeFileSync(fullPath, content, 'utf8');
+      }
+
+      // Minify the file in place to reduce size
+      try {
+        esbuild.buildSync({
+          entryPoints: [fullPath],
+          outfile: fullPath,
+          minify: true,
+          allowOverwrite: true,
+          target: 'esnext'
+        });
+      } catch (err) {
+        console.error('Failed to minify:', fullPath, err.message);
       }
     }
   }
