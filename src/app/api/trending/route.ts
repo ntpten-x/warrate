@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { NextResponse, NextRequest } from "next/server";
 import { initDatabase } from "@/lib/db";
 import { Item } from "@/entities/Item";

@@ -81,7 +81,7 @@ export async function initDatabase() {
           console.log("🔌 Connection established successfully!");
 
           // Seed units first if empty
-          const unitRepo = dataSourceInstance.getRepository<Unit>("Unit");
+          const unitRepo = dataSourceInstance.getRepository(Unit);
           const unitCount = await unitRepo.count();
           let seededUnits: Unit[] = [];
           if (unitCount === 0) {
@@ -99,7 +99,7 @@ export async function initDatabase() {
           }
 
           // Seed marketplace items if empty
-          const marketRepo = dataSourceInstance.getRepository<MarketItem>("MarketItem");
+          const marketRepo = dataSourceInstance.getRepository(MarketItem);
           const marketCount = await marketRepo.count();
 
           if (marketCount === 0) {
@@ -118,7 +118,7 @@ export async function initDatabase() {
           }
 
           // Seed categories if empty
-          const catRepo = dataSourceInstance.getRepository<Category>("Category");
+          const catRepo = dataSourceInstance.getRepository(Category);
           const catCount = await catRepo.count();
 
           let seededCategories: Category[] = [];
@@ -139,7 +139,7 @@ export async function initDatabase() {
           }
 
           // Seed main items table if empty
-          const itemRepo = dataSourceInstance.getRepository<Item>("Item");
+          const itemRepo = dataSourceInstance.getRepository(Item);
           const itemCount = await itemRepo.count();
 
           let seededItems: Item[] = [];
@@ -163,7 +163,7 @@ export async function initDatabase() {
           }
 
           // Seed Price logs if empty
-          const priceRepo = dataSourceInstance.getRepository<Price>("Price");
+          const priceRepo = dataSourceInstance.getRepository(Price);
           const priceCount = await priceRepo.count();
 
           if (priceCount === 0) {
