@@ -6,4 +6,4 @@ export default defineCloudflareConfig({
       external: ["pg-cloudflare", "expo-sqlite"],
     },
   },
-});
+} as any);
