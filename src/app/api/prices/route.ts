@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
     const latest = searchParams.get("latest") === "true";
 
     const dataSource = await initDatabase();
-    const priceRepo = dataSource.getRepository<Price>("Price");
+    const priceRepo = dataSource.getRepository(Price);
 
     // Scenario A: Retrieve only the single latest price record for autofill template
     if (latest) {
@@ -80,8 +80,8 @@ export async function POST(req: NextRequest) {
     }
 
     const dataSource = await initDatabase();
-    const itemRepo = dataSource.getRepository<Item>("Item");
-    const priceRepo = dataSource.getRepository<Price>("Price");
+    const itemRepo = dataSource.getRepository(Item);
+    const priceRepo = dataSource.getRepository(Price);
 
     const item = await itemRepo.findOneBy({ id: itemId });
     if (!item) {
@@ -127,8 +127,8 @@ export async function PUT(req: NextRequest) {
     }
 
     const dataSource = await initDatabase();
-    const priceRepo = dataSource.getRepository<Price>("Price");
-    const itemRepo = dataSource.getRepository<Item>("Item");
+    const priceRepo = dataSource.getRepository(Price);
+    const itemRepo = dataSource.getRepository(Item);
 
     const priceRecord = await priceRepo.findOneBy({ id });
     if (!priceRecord) {
@@ -168,7 +168,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     const dataSource = await initDatabase();
-    const priceRepo = dataSource.getRepository<Price>("Price");
+    const priceRepo = dataSource.getRepository(Price);
 
     const priceRecord = await priceRepo.findOneBy({ id });
     if (!priceRecord) {

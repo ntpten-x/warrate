@@ -9,7 +9,7 @@ export const revalidate = 300; // Cache for 5 minutes
 export async function GET() {
   try {
     const dataSource = await initDatabase();
-    const catRepo = dataSource.getRepository<Category>("Category");
+    const catRepo = dataSource.getRepository(Category);
     const categories = await catRepo.find({
       order: {
         order_index: "ASC",
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     }
 
     const dataSource = await initDatabase();
-    const catRepo = dataSource.getRepository<Category>("Category");
+    const catRepo = dataSource.getRepository(Category);
     
     // Check if slug is unique
     const existing = await catRepo.findOneBy({ slug: slug.trim().toLowerCase() });
@@ -64,7 +64,7 @@ export async function PUT(req: NextRequest) {
     }
 
     const dataSource = await initDatabase();
-    const catRepo = dataSource.getRepository<Category>("Category");
+    const catRepo = dataSource.getRepository(Category);
     
     const category = await catRepo.findOneBy({ id });
     if (!category) {
@@ -104,7 +104,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     const dataSource = await initDatabase();
-    const catRepo = dataSource.getRepository<Category>("Category");
+    const catRepo = dataSource.getRepository(Category);
     
     const category = await catRepo.findOneBy({ id });
     if (!category) {

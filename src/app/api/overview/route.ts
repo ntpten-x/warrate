@@ -19,8 +19,8 @@ export async function GET(req: NextRequest) {
     const skip = (page - 1) * limit;
 
     const dataSource = await initDatabase();
-    const itemRepo = dataSource.getRepository<Item>("Item");
-    const priceRepo = dataSource.getRepository<Price>("Price");
+    const itemRepo = dataSource.getRepository(Item);
+    const priceRepo = dataSource.getRepository(Price);
 
     // Build filter
     const where: any = {};

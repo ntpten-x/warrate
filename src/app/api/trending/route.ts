@@ -21,8 +21,8 @@ export async function GET(req: NextRequest) {
     }
     
     const dataSource = await initDatabase();
-    const itemRepo = dataSource.getRepository<Item>("Item");
-    const priceRepo = dataSource.getRepository<Price>("Price");
+    const itemRepo = dataSource.getRepository(Item);
+    const priceRepo = dataSource.getRepository(Price);
 
     let dbItems: Item[] = [];
     const itemViewsMap = new Map<string, number>();

@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
     const skip = (page - 1) * limit;
 
     const dataSource = await initDatabase();
-    const itemRepo = dataSource.getRepository<MarketItem>("MarketItem");
+    const itemRepo = dataSource.getRepository(MarketItem);
 
     // Use findAndCount to get both dynamic page content and total count in one query
     const [items, total] = await itemRepo.findAndCount({

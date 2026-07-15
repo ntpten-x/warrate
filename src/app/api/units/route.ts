@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   try {
     const dataSource = await initDatabase();
-    const unitRepo = dataSource.getRepository<Unit>("Unit");
+    const unitRepo = dataSource.getRepository(Unit);
     const units = await unitRepo.find({
       order: {
         name: "ASC",
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     }
 
     const dataSource = await initDatabase();
-    const unitRepo = dataSource.getRepository<Unit>("Unit");
+    const unitRepo = dataSource.getRepository(Unit);
     
     // Check if name is unique
     const existing = await unitRepo.findOneBy({ name: name.trim() });
@@ -59,7 +59,7 @@ export async function PUT(req: NextRequest) {
     }
 
     const dataSource = await initDatabase();
-    const unitRepo = dataSource.getRepository<Unit>("Unit");
+    const unitRepo = dataSource.getRepository(Unit);
     
     const unit = await unitRepo.findOneBy({ id });
     if (!unit) {
@@ -93,7 +93,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     const dataSource = await initDatabase();
-    const unitRepo = dataSource.getRepository<Unit>("Unit");
+    const unitRepo = dataSource.getRepository(Unit);
     
     const unit = await unitRepo.findOneBy({ id });
     if (!unit) {

@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
     const skip = (page - 1) * limit;
 
     const dataSource = await initDatabase();
-    const itemRepo = dataSource.getRepository<Item>("Item");
+    const itemRepo = dataSource.getRepository(Item);
 
     // Build search and filter conditions
     const where: any = {};
@@ -64,8 +64,8 @@ export async function POST(req: NextRequest) {
     }
 
     const dataSource = await initDatabase();
-    const itemRepo = dataSource.getRepository<Item>("Item");
-    const catRepo = dataSource.getRepository<Category>("Category");
+    const itemRepo = dataSource.getRepository(Item);
+    const catRepo = dataSource.getRepository(Category);
 
     const category = await catRepo.findOneBy({ id: categoryId });
     if (!category) {
@@ -95,8 +95,8 @@ export async function PUT(req: NextRequest) {
     }
 
     const dataSource = await initDatabase();
-    const itemRepo = dataSource.getRepository<Item>("Item");
-    const catRepo = dataSource.getRepository<Category>("Category");
+    const itemRepo = dataSource.getRepository(Item);
+    const catRepo = dataSource.getRepository(Category);
 
     const item = await itemRepo.findOneBy({ id });
     if (!item) {
@@ -130,7 +130,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     const dataSource = await initDatabase();
-    const itemRepo = dataSource.getRepository<Item>("Item");
+    const itemRepo = dataSource.getRepository(Item);
     const item = await itemRepo.findOneBy({ id });
     if (!item) {
       throw new AppError("ไม่พบไอเทมที่ต้องการลบ", 404, "NOT_FOUND");
