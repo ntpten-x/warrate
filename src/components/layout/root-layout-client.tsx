@@ -325,7 +325,7 @@ export function RootLayoutClient({
           <div className="flex items-center justify-center gap-1.5 text-zinc-400 font-medium order-1 md:order-2">
             <Mail className="w-3.5 h-3.5 text-game-red animate-pulse" />
             <span>ติดต่องานและโฆษณา :</span>
-            <a href="mailto:test@gmail.com" className="text-zinc-200 hover:text-game-red hover:underline transition-all select-all font-semibold font-mono">test@gmail.com</a>
+            <a href="mailto:natthaphongcontact@gmail.com" className="text-zinc-200 hover:text-game-red hover:underline transition-all select-all font-semibold font-mono">natthaphongcontact@gmail.com</a>
           </div>
           <div className="flex flex-col sm:flex-row items-center justify-center md:justify-end gap-2.5 sm:gap-4 order-2 md:order-3 w-full md:w-auto uppercase">
             {pageviews !== null && (
