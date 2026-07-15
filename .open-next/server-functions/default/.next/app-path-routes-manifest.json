@@ -1,0 +1,21 @@
+{
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/api/categories/route": "/api/categories",
+  "/api/items/route": "/api/items",
+  "/api/manage-items/route": "/api/manage-items",
+  "/api/overview/route": "/api/overview",
+  "/api/pageviews/route": "/api/pageviews",
+  "/api/prices/route": "/api/prices",
+  "/api/trending/click/route": "/api/trending/click",
+  "/api/trending/route": "/api/trending",
+  "/api/units/route": "/api/units",
+  "/categories/page": "/categories",
+  "/favicon.ico/route": "/favicon.ico",
+  "/icon.png/route": "/icon.png",
+  "/items/page": "/items",
+  "/login/page": "/login",
+  "/page": "/",
+  "/prices/page": "/prices",
+  "/units/page": "/units"
+}
