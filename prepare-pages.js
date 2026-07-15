@@ -4,25 +4,15 @@ const path = require('path');
 const srcDir = '.open-next';
 const destDir = path.join('.open-next', 'assets');
 
-// Copy worker.js to assets/_worker.js
-fs.copyFileSync(
-  path.join(srcDir, 'worker.js'),
-  path.join(destDir, '_worker.js')
-);
+// 1. Copy worker.js to assets/_worker.js and fix relative imports
+let workerContent = fs.readFileSync(path.join(srcDir, 'worker.js'), 'utf8');
+// Fix relative imports: "./cloudflare/..." -> "../cloudflare/..."
+workerContent = workerContent.replace(/(["'])\.\//g, '$1../');
+fs.writeFileSync(path.join(destDir, '_worker.js'), workerContent, 'utf8');
 
-// Directories to copy
-const dirsToCopy = ['cloudflare', 'middleware', 'server-functions', '.build'];
-
-for (const dir of dirsToCopy) {
-  const src = path.join(srcDir, dir);
-  const dest = path.join(destDir, dir);
-  if (fs.existsSync(src)) {
-    fs.cpSync(src, dest, { recursive: true });
-  }
-}
-
-// Rewrite require("fs") to require("node:fs") in all output files
+// 2. Rewrite require("fs") to require("node:fs") in server-functions (where handler.mjs and file-logger.js are)
 function rewriteNodeImports(dir) {
+  if (!fs.existsSync(dir)) return;
   const files = fs.readdirSync(dir);
   for (const file of files) {
     const fullPath = path.join(dir, file);
@@ -47,7 +37,8 @@ function rewriteNodeImports(dir) {
     }
   }
 }
-rewriteNodeImports(destDir);
 
+rewriteNodeImports(path.join(srcDir, 'server-functions'));
 
 console.log('Prepared .open-next/assets for Cloudflare Pages deployment!');
+

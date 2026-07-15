@@ -1,17 +1,17 @@
 //@ts-expect-error: Will be resolved by wrangler build
-import { handleCdnCgiImageRequest, handleImageRequest } from "./cloudflare/images.js";
+import { handleCdnCgiImageRequest, handleImageRequest } from "../cloudflare/images.js";
 //@ts-expect-error: Will be resolved by wrangler build
-import { runWithCloudflareRequestContext } from "./cloudflare/init.js";
+import { runWithCloudflareRequestContext } from "../cloudflare/init.js";
 //@ts-expect-error: Will be resolved by wrangler build
-import { maybeGetSkewProtectionResponse } from "./cloudflare/skew-protection.js";
+import { maybeGetSkewProtectionResponse } from "../cloudflare/skew-protection.js";
 // @ts-expect-error: Will be resolved by wrangler build
-import { handler as middlewareHandler } from "./middleware/handler.mjs";
+import { handler as middlewareHandler } from "../middleware/handler.mjs";
 //@ts-expect-error: Will be resolved by wrangler build
-export { DOQueueHandler } from "./.build/durable-objects/queue.js";
+export { DOQueueHandler } from "../.build/durable-objects/queue.js";
 //@ts-expect-error: Will be resolved by wrangler build
-export { DOShardedTagCache } from "./.build/durable-objects/sharded-tag-cache.js";
+export { DOShardedTagCache } from "../.build/durable-objects/sharded-tag-cache.js";
 //@ts-expect-error: Will be resolved by wrangler build
-export { BucketCachePurge } from "./.build/durable-objects/bucket-cache-purge.js";
+export { BucketCachePurge } from "../.build/durable-objects/bucket-cache-purge.js";
 export default {
     async fetch(request, env, ctx) {
         return runWithCloudflareRequestContext(request, env, ctx, async () => {
@@ -36,7 +36,7 @@ export default {
                 return reqOrResp;
             }
             // @ts-expect-error: resolved by wrangler build
-            const { handler } = await import("./server-functions/default/handler.mjs");
+            const { handler } = await import("../server-functions/default/handler.mjs");
             return handler(reqOrResp, env, ctx, request.signal);
         });
     },
