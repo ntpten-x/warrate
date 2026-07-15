@@ -4,6 +4,7 @@ import { Price } from "@/entities/Price";
 import { Item } from "@/entities/Item";
 import { handleApiError, AppError, verifyAuth } from "@/lib/error";
 
+export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {

@@ -3,6 +3,7 @@ import { initDatabase } from "@/lib/db";
 import { Unit } from "@/entities/Unit";
 import { handleApiError, AppError, verifyAuth } from "@/lib/error";
 
+export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 export async function GET() {

@@ -3,6 +3,7 @@ import { initDatabase } from "@/lib/db";
 import { Category } from "@/entities/Category";
 import { handleApiError, AppError, verifyAuth } from "@/lib/error";
 
+export const runtime = "edge";
 export const revalidate = 300; // Cache for 5 minutes
 
 export async function GET() {

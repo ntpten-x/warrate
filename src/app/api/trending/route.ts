@@ -6,6 +6,7 @@ import { handleApiError } from "@/lib/error";
 import { redis } from "@/lib/redis";
 import { In } from "typeorm";
 
+export const runtime = "edge";
 export const revalidate = 10; // Cache trending items for 10 seconds in production
 
 export async function GET(req: NextRequest) {

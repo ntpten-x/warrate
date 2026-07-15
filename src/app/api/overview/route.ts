@@ -6,6 +6,7 @@ import { handleApiError } from "@/lib/error";
 import { ILike } from "typeorm";
 import { redis } from "@/lib/redis";
 
+export const runtime = "edge";
 export const revalidate = 15; // Cache response for 15 seconds to support high concurrency
 
 export async function GET(req: NextRequest) {

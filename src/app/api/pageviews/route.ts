@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { redis } from "@/lib/redis";
 
+export const runtime = "edge";
+
 export async function GET(req: Request) {
   try {
     // Check if we should only fetch the count without incrementing
