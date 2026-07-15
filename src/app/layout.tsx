@@ -12,7 +12,6 @@ const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
   title: "War Rate",
-  description: "War Rate login dashboard and game client interface.",
 };
 
 export default function RootLayout({
