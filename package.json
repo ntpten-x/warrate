@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:cloudflare": "npx @opennextjs/cloudflare build && cp .open-next/worker.js .open-next/assets/_worker.js",
+    "build:cloudflare": "npx @opennextjs/cloudflare build && npx esbuild .open-next/worker.js --bundle --outfile=.open-next/assets/_worker.js --platform=browser --format=esm --external:node:* --external:cloudflare:* --external:fs --external:path --external:os --external:url --external:vm --external:async_hooks --external:crypto --external:events --external:http --external:https --external:net --external:stream --external:tls --external:util --external:zlib --external:string_decoder --external:buffer --external:module --external:pg-cloudflare --external:expo-sqlite",
     "start": "next start",
     "lint": "eslint",
     "typeorm": "ts-node ./node_modules/typeorm/cli.js -d typeorm.config.ts",
