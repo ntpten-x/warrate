@@ -4,7 +4,7 @@ import { initDatabase } from "@/lib/db";
 import { Item } from "@/entities/Item";
 import { Price } from "@/entities/Price";
 import { handleApiError } from "@/lib/error";
-import { ILike } from "typeorm";
+import { ILike, In, LessThanOrEqual } from "typeorm";
 import { redis } from "@/lib/redis";
 
 export const revalidate = 15; // Cache response for 15 seconds to support high concurrency
@@ -22,8 +22,27 @@ export async function GET(req: NextRequest) {
     const itemRepo = dataSource.getRepository(Item);
     const priceRepo = dataSource.getRepository(Price);
 
+    // Get unique item IDs that have at least one price record in the database
+    const rawActiveItems = await priceRepo.createQueryBuilder("price")
+      .select("price.item_id", "itemId")
+      .distinct(true)
+      .getRawMany();
+    const activeItemIds = rawActiveItems.map(r => r.itemId || r.itemid).filter(Boolean);
+
+    if (activeItemIds.length === 0) {
+      return NextResponse.json({
+        data: [],
+        total: 0,
+        page,
+        limit,
+        totalPages: 0,
+      });
+    }
+
     // Build filter
-    const where: any = {};
+    const where: any = {
+      id: In(activeItemIds)
+    };
     if (search) {
       where.name = ILike(`%${search}%`);
     }
@@ -108,7 +127,10 @@ export async function GET(req: NextRequest) {
     const data = await Promise.all(items.map(async (item) => {
       // Get last 7 price points chronologically
       const history = await priceRepo.find({
-        where: { item: { id: item.id } },
+        where: {
+          item: { id: item.id },
+          recordedAt: LessThanOrEqual(new Date()),
+        },
         order: { recordedAt: "DESC" },
         take: 7,
       });
@@ -137,6 +159,7 @@ export async function GET(req: NextRequest) {
         // Wholesale/Bulk attributes
         isBulk: latest ? latest.isBulk : false,
         unitQuantity: latest ? latest.unitQuantity : 1,
+        showUnitPrice: latest ? (latest.showUnitPrice !== false) : true,
         
         // Total Prices (lump sum)
         totalAvgPrice: latest ? latest.avgPrice : 0,
@@ -152,13 +175,13 @@ export async function GET(req: NextRequest) {
         trend,
         views: viewsMap.get(item.id) || 0,
         
-        // Sparkline & History are fully normalized to Unit Price
-        sparkline: history.map(h => h.avgPrice / (h.unitQuantity || 1)),
+        // Sparkline & History are fully normalized to Unit Price or Total Package Price based on flag
+        sparkline: history.map(h => (latest && latest.showUnitPrice === false) ? h.avgPrice : (h.avgPrice / (h.unitQuantity || 1))),
         history: history.map(h => ({
           date: new Date(h.recordedAt).toLocaleDateString("th-TH", { day: "numeric", month: "short" }),
-          avgPrice: h.avgPrice / (h.unitQuantity || 1),
-          lowPrice: h.lowPrice / (h.unitQuantity || 1),
-          highPrice: h.highPrice / (h.unitQuantity || 1),
+          avgPrice: (latest && latest.showUnitPrice === false) ? h.avgPrice : (h.avgPrice / (h.unitQuantity || 1)),
+          lowPrice: (latest && latest.showUnitPrice === false) ? h.lowPrice : (h.lowPrice / (h.unitQuantity || 1)),
+          highPrice: (latest && latest.showUnitPrice === false) ? h.highPrice : (h.highPrice / (h.unitQuantity || 1)),
         })),
       };
     }));

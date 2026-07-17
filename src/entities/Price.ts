@@ -37,6 +37,9 @@ export class Price {
   @Column({ type: "boolean", name: "is_bulk", default: false })
   isBulk!: boolean;
 
+  @Column({ type: "boolean", name: "show_unit_price", default: true })
+  showUnitPrice!: boolean;
+
   @CreateDateColumn({ type: "timestamp with time zone", name: "created_at", default: () => "CURRENT_TIMESTAMP" })
   createdAt!: Date;
 }

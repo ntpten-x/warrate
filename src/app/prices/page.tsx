@@ -50,6 +50,7 @@ interface PriceRecord {
   createdAt: string;
   unitQuantity?: number;
   isBulk?: boolean;
+  showUnitPrice?: boolean;
 }
 
 function PricesContent() {
@@ -95,6 +96,7 @@ function PricesContent() {
 
   const [formUnitQuantity, setFormUnitQuantity] = useState("1");
   const [formIsBulk, setFormIsBulk] = useState(false);
+  const [formShowUnitPrice, setFormShowUnitPrice] = useState(true);
 
   // Delete Confirm State
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
@@ -173,8 +175,8 @@ function PricesContent() {
         setFormLowPrice("");
         setFormHighPrice("");
         setFormAvgPrice("");
-        setFormSource("");
-        setFormNote("");
+        setFormSource("กลุ่ม Facebook Community WarzTH");
+        setFormNote("อ้างอิงจาก กลุ่ม Facebook Community WarzTH");
         const localNow = new Date();
         const formattedDate = new Date(localNow.getTime() - localNow.getTimezoneOffset() * 60000)
           .toISOString()
@@ -227,6 +229,7 @@ function PricesContent() {
     setFormNote(latestCachedPrice.note || "");
     setFormUnitQuantity(String(latestCachedPrice.unitQuantity || 1));
     setFormIsBulk(!!latestCachedPrice.isBulk);
+    setFormShowUnitPrice(latestCachedPrice.showUnitPrice !== false);
     toast.success("คัดลอกราคาและแหล่งอ้างอิงล่าสุดเรียบร้อย!");
   };
 
@@ -237,10 +240,11 @@ function PricesContent() {
     setFormLowPrice("");
     setFormHighPrice("");
     setFormAvgPrice("");
-    setFormSource("");
-    setFormNote("");
+    setFormSource("กลุ่ม Facebook Community WarzTH");
+    setFormNote("อ้างอิงจาก กลุ่ม Facebook Community WarzTH");
     setFormUnitQuantity("1");
     setFormIsBulk(false);
+    setFormShowUnitPrice(true);
     // Set default recorded datetime to local timezone string format
     const localNow = new Date();
     const formattedDate = new Date(localNow.getTime() - localNow.getTimezoneOffset() * 60000)
@@ -263,6 +267,7 @@ function PricesContent() {
     setFormNote(record.note || "");
     setFormUnitQuantity(String(record.unitQuantity || 1));
     setFormIsBulk(!!record.isBulk);
+    setFormShowUnitPrice(record.showUnitPrice !== false);
 
     const recordDate = new Date(record.recordedAt);
     const formattedDate = new Date(recordDate.getTime() - recordDate.getTimezoneOffset() * 60000)
@@ -344,6 +349,7 @@ function PricesContent() {
             recordedAt: formRecordedAt ? new Date(formRecordedAt).toISOString() : new Date().toISOString(),
             unitQuantity: Number(formUnitQuantity || 1),
             isBulk: formIsBulk,
+            showUnitPrice: formShowUnitPrice,
           })
         });
 
@@ -367,6 +373,7 @@ function PricesContent() {
             recordedAt: formRecordedAt ? new Date(formRecordedAt).toISOString() : new Date().toISOString(),
             unitQuantity: Number(formUnitQuantity || 1),
             isBulk: formIsBulk,
+            showUnitPrice: formShowUnitPrice,
           })
         });
 
@@ -680,7 +687,7 @@ function PricesContent() {
                           <span className="font-gaming text-zinc-100 font-bold tracking-wide">{record.item?.name}</span>
                           {record.isBulk ? (
                             <span className="text-[10px] text-amber-400 font-mono font-semibold">
-                              📦 เรทการซื้อขาย {record.unitQuantity} {record.item?.category?.unit?.name || "ชิ้น"} | {record.item?.category?.unit?.name || "ชิ้น"}ละ {(record.avgPrice / (record.unitQuantity || 1)).toLocaleString(undefined, { maximumFractionDigits: 2 })} บาท
+                              📦 เรทการซื้อขาย {record.unitQuantity} {record.item?.category?.unit?.name || "ชิ้น"}{record.showUnitPrice !== false && ` | ${record.item?.category?.unit?.name || "ชิ้น"}ละ ${(record.avgPrice / (record.unitQuantity || 1)).toLocaleString(undefined, { maximumFractionDigits: 2 })} บาท`}
                             </span>
                           ) : (
                             <span className="text-[10px] text-zinc-505 font-mono">
@@ -903,20 +910,35 @@ function PricesContent() {
 
               {/* Wholesale/Bulk settings panel */}
               <div className="flex flex-col gap-3 p-3 bg-black/40 border border-zinc-900 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="isBulk"
-                    checked={formIsBulk}
-                    onChange={(e) => {
-                      setFormIsBulk(e.target.checked);
-                      if (!e.target.checked) setFormUnitQuantity("1");
-                    }}
-                    className="accent-game-red w-4 h-4"
-                  />
-                  <label htmlFor="isBulk" className="font-gaming text-xs font-semibold text-zinc-350 cursor-pointer select-none">
-                    เป็นเรทแบบเหมา
-                  </label>
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="isBulk"
+                      checked={formIsBulk}
+                      onChange={(e) => {
+                        setFormIsBulk(e.target.checked);
+                        if (!e.target.checked) setFormUnitQuantity("1");
+                      }}
+                      className="accent-game-red w-4 h-4"
+                    />
+                    <label htmlFor="isBulk" className="font-gaming text-xs font-semibold text-zinc-350 cursor-pointer select-none">
+                      เป็นเรทแบบเหมา
+                    </label>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="showUnitPrice"
+                      checked={formShowUnitPrice}
+                      onChange={(e) => setFormShowUnitPrice(e.target.checked)}
+                      className="accent-game-red w-4 h-4"
+                    />
+                    <label htmlFor="showUnitPrice" className="font-gaming text-xs font-semibold text-zinc-350 cursor-pointer select-none">
+                      แสดงราคาเฉลี่ย
+                    </label>
+                  </div>
                 </div>
 
                 {formIsBulk && (

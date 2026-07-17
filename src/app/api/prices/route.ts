@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
   try {
     await verifyAuth(req);
 
-    const { itemId, lowPrice, highPrice, avgPrice, source, note, recordedAt, unitQuantity, isBulk } = await req.json();
+    const { itemId, lowPrice, highPrice, avgPrice, source, note, recordedAt, unitQuantity, isBulk, showUnitPrice } = await req.json();
 
     if (!itemId || lowPrice === undefined || highPrice === undefined || avgPrice === undefined || !source) {
       throw new AppError("ข้อมูลสำหรับบันทึกราคาไม่ครบถ้วน", 400, "VALIDATION_ERROR");
@@ -98,6 +98,7 @@ export async function POST(req: NextRequest) {
       recordedAt: recordedAt ? new Date(recordedAt) : new Date(),
       unitQuantity: unitQuantity !== undefined ? Math.max(1, Number(unitQuantity)) : 1,
       isBulk: !!isBulk,
+      showUnitPrice: showUnitPrice === undefined ? true : !!showUnitPrice,
     });
 
     const saved = await priceRepo.save(newPrice);
@@ -111,7 +112,7 @@ export async function PUT(req: NextRequest) {
   try {
     await verifyAuth(req);
 
-    const { id, itemId, lowPrice, highPrice, avgPrice, source, note, recordedAt, unitQuantity, isBulk } = await req.json();
+    const { id, itemId, lowPrice, highPrice, avgPrice, source, note, recordedAt, unitQuantity, isBulk, showUnitPrice } = await req.json();
 
     if (!id || !itemId || lowPrice === undefined || highPrice === undefined || avgPrice === undefined || !source) {
       throw new AppError("ข้อมูลสำหรับแก้ไขไม่ครบถ้วน", 400, "VALIDATION_ERROR");
@@ -149,6 +150,7 @@ export async function PUT(req: NextRequest) {
     priceRecord.recordedAt = recordedAt ? new Date(recordedAt) : new Date();
     priceRecord.unitQuantity = unitQuantity !== undefined ? Math.max(1, Number(unitQuantity)) : 1;
     priceRecord.isBulk = !!isBulk;
+    priceRecord.showUnitPrice = showUnitPrice === undefined ? true : !!showUnitPrice;
 
     const updated = await priceRepo.save(priceRecord);
     return NextResponse.json(updated);

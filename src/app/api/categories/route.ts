@@ -2,14 +2,57 @@ export const dynamic = "force-dynamic";
 import { NextResponse, NextRequest } from "next/server";
 import { initDatabase } from "@/lib/db";
 import { Category } from "@/entities/Category";
+import { Item } from "@/entities/Item";
+import { Price } from "@/entities/Price";
+import { In } from "typeorm";
 import { handleApiError, AppError, verifyAuth } from "@/lib/error";
 
 export const revalidate = 300; // Cache for 5 minutes
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const { searchParams } = new URL(req.url);
+    const activeOnly = searchParams.get("activeOnly") === "true";
+
     const dataSource = await initDatabase();
     const catRepo = dataSource.getRepository(Category);
+
+    if (activeOnly) {
+      const priceRepo = dataSource.getRepository(Price);
+      const itemRepo = dataSource.getRepository(Item);
+
+      // Get unique item IDs that have at least one price record
+      const rawActiveItems = await priceRepo.createQueryBuilder("price")
+        .select("price.item_id", "itemId")
+        .distinct(true)
+        .getRawMany();
+      const activeItemIds = rawActiveItems.map(r => r.itemId || r.itemid).filter(Boolean);
+
+      if (activeItemIds.length === 0) {
+        return NextResponse.json([]);
+      }
+
+      // Fetch the category IDs for those items
+      const items = await itemRepo.find({
+        where: { id: In(activeItemIds) },
+        relations: { category: true }
+      });
+      console.log("DEBUG activeItemIds:", activeItemIds);
+      console.log("DEBUG fetched items:", items.map(it => ({ id: it.id, name: it.name, catId: it.category?.id, cat: it.category })));
+      const activeCategoryIds = items.map(it => it.category?.id).filter(Boolean);
+      const uniqueCategoryIds = Array.from(new Set(activeCategoryIds));
+
+      if (uniqueCategoryIds.length === 0) {
+        return NextResponse.json([]);
+      }
+
+      const categories = await catRepo.find({
+        where: { id: In(uniqueCategoryIds) },
+        order: { order_index: "ASC" },
+      });
+      return NextResponse.json(categories);
+    }
+
     const categories = await catRepo.find({
       order: {
         order_index: "ASC",

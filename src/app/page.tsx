@@ -50,6 +50,7 @@ interface OverviewItem {
   // Bulk attributes
   isBulk: boolean;
   unitQuantity: number;
+  showUnitPrice: boolean;
 
   // Total Prices (lump sum package price)
   totalAvgPrice: number;
@@ -141,7 +142,7 @@ export default function Home() {
 
   // Fetch categories
   useEffect(() => {
-    fetch("/api/categories")
+    fetch("/api/categories?activeOnly=true")
       .then(res => res.ok ? res.json() : [])
       .then(data => setCategoriesList(data))
       .catch(err => console.error("Error loading categories:", err));
@@ -333,9 +334,11 @@ export default function Home() {
 
                     <div className="flex items-center gap-3 mt-1.5 font-mono text-[11px]">
                       <span className="font-semibold text-emerald-400">
-                        {item.avgPrice > 0 ? `${item.avgPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })} บ.` : "-"}
+                        {item.showUnitPrice !== false
+                          ? (item.avgPrice > 0 ? `${item.avgPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })} บ.` : "-")
+                          : (item.totalAvgPrice > 0 ? `${item.totalAvgPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })} บ.` : "-")}
                       </span>
-                      {item.avgPrice > 0 && (
+                      {item.showUnitPrice !== false && item.avgPrice > 0 && (
                         <span className={`text-[10px] font-bold ${item.trend >= 0 ? "text-emerald-400" : "text-red-400"}`}>
                           {item.trend >= 0 ? `▲ +${item.trend.toFixed(1)}%` : `▼ ${item.trend.toFixed(1)}%`}
                         </span>
@@ -512,7 +515,7 @@ export default function Home() {
 
                       {/* Avg Price per Piece */}
                       <td className="px-6 py-6 text-center font-mono">
-                        {item.avgPrice > 0 ? (
+                        {item.showUnitPrice !== false && item.avgPrice > 0 ? (
                           <span className="text-amber-100 font-semibold">{item.avgPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })} บาท</span>
                         ) : (
                           <span className="text-zinc-500">-</span>
@@ -521,7 +524,7 @@ export default function Home() {
 
                       {/* 24h Trend */}
                       <td className="px-6 py-6 text-center font-mono text-sm">
-                        {item.avgPrice === 0 ? (
+                        {item.showUnitPrice === false || item.avgPrice === 0 ? (
                           <span className="text-zinc-500">-</span>
                         ) : item.trend > 0 ? (
                           <span className="text-emerald-400 font-extrabold flex items-center justify-center gap-1">
@@ -610,13 +613,13 @@ export default function Home() {
                   <div className="flex flex-col gap-0.5 min-w-0">
                     <span className="text-[9px] text-zinc-500 uppercase font-semibold truncate">เฉลี่ย/หน่วย</span>
                     <span className="font-mono text-xs font-semibold text-amber-100 truncate">
-                      {item.avgPrice > 0 ? `${item.avgPrice.toLocaleString(undefined, { maximumFractionDigits: 1 })} บ.` : "-"}
+                      {item.showUnitPrice !== false && item.avgPrice > 0 ? `${item.avgPrice.toLocaleString(undefined, { maximumFractionDigits: 1 })} บ.` : "-"}
                     </span>
                   </div>
                 </div>
 
                 {/* Bottom section: 24h Trend */}
-                {item.avgPrice > 0 && (
+                {item.showUnitPrice !== false && item.avgPrice > 0 && (
                   <div className="flex justify-between items-center bg-black/40 border border-zinc-900/30 px-3 py-1.5 rounded text-[10px] font-mono">
                     <span className="text-zinc-500 uppercase font-semibold font-gaming truncate">เทรนด์ 24h</span>
                     {item.trend > 0 ? (
@@ -695,35 +698,47 @@ export default function Home() {
                     <Package className="w-4 h-4" /> เรทการซื้อขาย
                   </span>
                   <span className="font-mono text-center sm:text-right w-full sm:w-auto">
-                    จำนวน : {selectedItem.unitQuantity} {selectedItem.category?.unit?.name || "ชิ้น"} | เฉลี่ยตก{selectedItem.category?.unit?.name || "ชิ้น"}ละ: {selectedItem.avgPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })} บาท
+                    จำนวน : {selectedItem.unitQuantity} {selectedItem.category?.unit?.name || "ชิ้น"}{selectedItem.showUnitPrice !== false && ` | เฉลี่ยตก${selectedItem.category?.unit?.name || "ชิ้น"}ละ: ${selectedItem.avgPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })} บาท`}
                   </span>
                 </div>
               )}
 
-              {/* Three column prices stats block (Unit Prices) */}
+              {/* Three column prices stats block (Unit Prices or Total Package Prices) */}
               <div className="grid grid-cols-3 gap-2 sm:gap-3 text-center">
                 <div className="bg-black/40 border border-zinc-900/60 rounded p-2 sm:p-3 flex flex-col gap-0.5 sm:gap-1 justify-center min-w-0">
-                  <span className="text-[9px] sm:text-[10px] text-zinc-500 uppercase font-gaming font-semibold truncate">ราคาต่อ{selectedItem.category?.unit?.name || "ชิ้น"}</span>
-                  <span className="font-mono text-xs sm:text-base md:text-lg font-extrabold text-emerald-400 truncate">
-                    {selectedItem.avgPrice > 0 ? `${selectedItem.avgPrice.toLocaleString(undefined, { maximumFractionDigits: 1 })} บ.` : "-"}
+                  <span className="text-[9px] sm:text-[10px] text-zinc-500 uppercase font-gaming font-semibold truncate">
+                    {selectedItem.showUnitPrice !== false ? `ราคาต่อ${selectedItem.category?.unit?.name || "ชิ้น"}` : "ราคาเสนอขาย"}
                   </span>
-                  {selectedItem.avgPrice > 0 && (
+                  <span className="font-mono text-xs sm:text-base md:text-lg font-extrabold text-emerald-400 truncate">
+                    {selectedItem.showUnitPrice !== false 
+                      ? (selectedItem.avgPrice > 0 ? `${selectedItem.avgPrice.toLocaleString(undefined, { maximumFractionDigits: 1 })} บ.` : "-")
+                      : (selectedItem.totalAvgPrice > 0 ? `${selectedItem.totalAvgPrice.toLocaleString()} บ.` : "-")}
+                  </span>
+                  {selectedItem.showUnitPrice !== false && selectedItem.avgPrice > 0 && (
                     <span className={`text-[9px] sm:text-[10px] font-bold ${selectedItem.trend >= 0 ? "text-emerald-400" : "text-red-400"} truncate`}>
                       {selectedItem.trend >= 0 ? `▲ +${selectedItem.trend.toFixed(1)}%` : `▼ ${selectedItem.trend.toFixed(1)}%`}
                     </span>
                   )}
                 </div>
                 <div className="bg-black/40 border border-zinc-900/60 rounded p-2 sm:p-3 flex flex-col gap-0.5 sm:gap-1 justify-center min-w-0">
-                  <span className="text-[9px] sm:text-[10px] text-zinc-500 uppercase font-gaming font-semibold truncate">ราคาสูงสุดต่อ{selectedItem.category?.unit?.name || "ชิ้น"}</span>
+                  <span className="text-[9px] sm:text-[10px] text-zinc-500 uppercase font-gaming font-semibold truncate">
+                    {selectedItem.showUnitPrice !== false ? `ราคาสูงสุดต่อ${selectedItem.category?.unit?.name || "ชิ้น"}` : "ราคาสูงสุด"}
+                  </span>
                   <span className="font-mono text-xs sm:text-base md:text-lg font-extrabold text-blue-400 truncate">
-                    {selectedItem.highPrice > 0 ? `${selectedItem.highPrice.toLocaleString(undefined, { maximumFractionDigits: 1 })} บ.` : "-"}
+                    {selectedItem.showUnitPrice !== false 
+                      ? (selectedItem.highPrice > 0 ? `${selectedItem.highPrice.toLocaleString(undefined, { maximumFractionDigits: 1 })} บ.` : "-")
+                      : (selectedItem.totalHighPrice > 0 ? `${selectedItem.totalHighPrice.toLocaleString()} บ.` : "-")}
                   </span>
                   <span className="text-[8px] sm:text-[9px] text-zinc-500 truncate">สูงสุดที่พบ</span>
                 </div>
                 <div className="bg-black/40 border border-zinc-900/60 rounded p-2 sm:p-3 flex flex-col gap-0.5 sm:gap-1 justify-center min-w-0">
-                  <span className="text-[9px] sm:text-[10px] text-zinc-500 uppercase font-gaming font-semibold truncate">ราคาต่ำสุดต่อ{selectedItem.category?.unit?.name || "ชิ้น"}</span>
+                  <span className="text-[9px] sm:text-[10px] text-zinc-500 uppercase font-gaming font-semibold truncate">
+                    {selectedItem.showUnitPrice !== false ? `ราคาต่ำสุดต่อ${selectedItem.category?.unit?.name || "ชิ้น"}` : "ราคาต่ำสุด"}
+                  </span>
                   <span className="font-mono text-xs sm:text-base md:text-lg font-extrabold text-red-400 truncate">
-                    {selectedItem.lowPrice > 0 ? `${selectedItem.lowPrice.toLocaleString(undefined, { maximumFractionDigits: 1 })} บ.` : "-"}
+                    {selectedItem.showUnitPrice !== false 
+                      ? (selectedItem.lowPrice > 0 ? `${selectedItem.lowPrice.toLocaleString(undefined, { maximumFractionDigits: 1 })} บ.` : "-")
+                      : (selectedItem.totalLowPrice > 0 ? `${selectedItem.totalLowPrice.toLocaleString()} บ.` : "-")}
                   </span>
                   <span className="text-[8px] sm:text-[9px] text-zinc-500 truncate">ต่ำสุดที่พบ</span>
                 </div>

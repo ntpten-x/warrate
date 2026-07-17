@@ -5,7 +5,7 @@ import { Item } from "@/entities/Item";
 import { Price } from "@/entities/Price";
 import { handleApiError } from "@/lib/error";
 import { redis } from "@/lib/redis";
-import { In } from "typeorm";
+import { In, LessThanOrEqual } from "typeorm";
 
 export const revalidate = 10; // Cache trending items for 10 seconds in production
 
@@ -27,6 +27,17 @@ export async function GET(req: NextRequest) {
     let dbItems: Item[] = [];
     const itemViewsMap = new Map<string, number>();
 
+    // Get unique item IDs that have at least one price record in the database
+    const rawActiveItems = await priceRepo.createQueryBuilder("price")
+      .select("price.item_id", "itemId")
+      .distinct(true)
+      .getRawMany();
+    const activeItemIds = rawActiveItems.map(r => r.itemId || r.itemid).filter(Boolean);
+
+    if (activeItemIds.length === 0) {
+      return NextResponse.json({ data: [] });
+    }
+
     if (topClicked.length > 0) {
       // Parse the zrevrange result [id1, score1, id2, score2, ...]
       const itemIds: string[] = [];
@@ -37,13 +48,19 @@ export async function GET(req: NextRequest) {
         itemViewsMap.set(id, score);
       }
 
-      // Fetch items matching these IDs
+      // Fetch items matching these IDs that have at least one price log
+      const matchedIds = itemIds.filter(id => activeItemIds.includes(id));
+      if (matchedIds.length > 0) {
+        dbItems = await itemRepo.find({
+          where: { id: In(matchedIds) },
+        });
+      }
+    }
+    
+    // If no trending items could be fetched, or none of them have prices, fall back to newest active items
+    if (dbItems.length === 0) {
       dbItems = await itemRepo.find({
-        where: { id: In(itemIds) },
-      });
-    } else {
-      // Fallback: If no clicks have been recorded yet, grab the 3 newest items from the database
-      dbItems = await itemRepo.find({
+        where: { id: In(activeItemIds) },
         order: { created_at: "DESC" },
         take: 3,
       });
@@ -57,7 +74,10 @@ export async function GET(req: NextRequest) {
     const rawData = await Promise.all(dbItems.map(async (item) => {
       // Get last 7 price points chronologically
       const history = await priceRepo.find({
-        where: { item: { id: item.id } },
+        where: {
+          item: { id: item.id },
+          recordedAt: LessThanOrEqual(new Date()),
+        },
         order: { recordedAt: "DESC" },
         take: 7,
       });
@@ -88,6 +108,7 @@ export async function GET(req: NextRequest) {
         // Wholesale/Bulk attributes
         isBulk: latest ? latest.isBulk : false,
         unitQuantity: latest ? latest.unitQuantity : 1,
+        showUnitPrice: latest ? (latest.showUnitPrice !== false) : true,
         
         // Total Prices (lump sum)
         totalAvgPrice: latest ? latest.avgPrice : 0,
@@ -103,13 +124,13 @@ export async function GET(req: NextRequest) {
         trend,
         views,
         
-        // Sparkline & History are fully normalized to Unit Price
-        sparkline: history.map(h => h.avgPrice / (h.unitQuantity || 1)),
+        // Sparkline & History are fully normalized to Unit Price or Total Package Price based on flag
+        sparkline: history.map(h => (latest && latest.showUnitPrice === false) ? h.avgPrice : (h.avgPrice / (h.unitQuantity || 1))),
         history: history.map(h => ({
           date: new Date(h.recordedAt).toLocaleDateString("th-TH", { day: "numeric", month: "short" }),
-          avgPrice: h.avgPrice / (h.unitQuantity || 1),
-          lowPrice: h.lowPrice / (h.unitQuantity || 1),
-          highPrice: h.highPrice / (h.unitQuantity || 1),
+          avgPrice: (latest && latest.showUnitPrice === false) ? h.avgPrice : (h.avgPrice / (h.unitQuantity || 1)),
+          lowPrice: (latest && latest.showUnitPrice === false) ? h.lowPrice : (h.lowPrice / (h.unitQuantity || 1)),
+          highPrice: (latest && latest.showUnitPrice === false) ? h.highPrice : (h.highPrice / (h.unitQuantity || 1)),
         })),
       };
     }));
