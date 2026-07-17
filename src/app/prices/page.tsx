@@ -940,6 +940,40 @@ function PricesContent() {
                 )}
               </div>
 
+              {/* Quick Calculator Helper */}
+              <div className="flex flex-col gap-1.5 p-3.5 bg-blue-950/10 border border-blue-900/30 rounded-lg">
+                <label className="font-gaming text-[10px] text-blue-400 uppercase font-semibold">
+                  เครื่องมือช่วยคำนวณราคาด่วน (ป้อนราคาเดี่ยว หรือหลายราคาคั่นด้วยจุลภาค)
+                </label>
+                <Input
+                  type="text"
+                  placeholder="ตัวอย่าง: 100 หรือ 90, 100, 110"
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    const parsed = val.split(/[,\s]+/)
+                      .map(n => n.trim())
+                      .filter(n => n !== "" && !isNaN(Number(n)))
+                      .map(Number);
+                    
+                    if (parsed.length > 0) {
+                      const min = Math.min(...parsed);
+                      const max = Math.max(...parsed);
+                      const sum = parsed.reduce((a, b) => a + b, 0);
+                      const avg = Math.round(sum / parsed.length);
+                      
+                      setFormLowPrice(String(min));
+                      setFormHighPrice(String(max));
+                      setFormAvgPrice(String(avg));
+                      setShowDeviationWarning(false);
+                    }
+                  }}
+                  className="bg-black/50 border-zinc-800 text-xs focus:border-blue-500 font-mono"
+                />
+                <span className="text-[9px] text-zinc-550 leading-normal">
+                  * ป้อนราคาเดี่ยวเพื่อกำหนดราคาเดียวทั้งหมด หรือป้อนหลายราคาคั่นด้วยคอมมา/เว้นวรรคเพื่อระบบหา ต่ำสุด/เฉลี่ย/สูงสุด ให้อัตโนมัติ
+                </span>
+              </div>
+
               {/* Prices Inputs low / avg / high */}
               <div className="grid grid-cols-3 gap-3">
                 <div className="flex flex-col gap-1.5">
