@@ -60,6 +60,7 @@ function rewriteNodeImports(dir) {
           entryPoints: [fullPath],
           outfile: fullPath,
           minify: true,
+          keepNames: true,
           allowOverwrite: true,
           target: 'esnext'
         });

@@ -40,3 +40,5 @@ export class Price {
   @CreateDateColumn({ type: "timestamp with time zone", name: "created_at", default: () => "CURRENT_TIMESTAMP" })
   createdAt!: Date;
 }
+Object.defineProperty(Price, "name", { value: "Price", configurable: true });
+

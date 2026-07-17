@@ -27,3 +27,5 @@ export class Category {
   @CreateDateColumn({ type: "timestamp", default: () => "CURRENT_TIMESTAMP", name: "created_at" })
   created_at!: Date;
 }
+Object.defineProperty(Category, "name", { value: "Category", configurable: true });
+

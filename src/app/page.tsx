@@ -251,6 +251,22 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Facebook Reference Source Disclaimer */}
+      <div className="flex items-center gap-3 bg-neutral-950/60 border border-zinc-900/80 p-3.5 rounded-lg w-full backdrop-blur-sm shadow-[0_4px_20px_rgba(0,0,0,0.4)] relative overflow-hidden group/ref">
+        <div className="absolute top-0 left-0 w-[3px] h-full bg-blue-600 transition-all duration-300 group-hover/ref:bg-blue-500" />
+        <div className="w-9 h-9 rounded bg-blue-900/10 border border-blue-900/30 flex items-center justify-center text-blue-500 shrink-0 shadow-[0_0_10px_rgba(59,130,246,0.15)] group-hover/ref:scale-105 transition-transform duration-300">
+          <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-current" xmlns="http://www.w3.org/2000/svg">
+            <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.75z" />
+          </svg>
+        </div>
+        <div className="flex flex-col text-left">
+          <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-extrabold font-gaming">อ้างอิงข้อมูล</span>
+          <span className="text-xs text-zinc-300 font-semibold mt-0.5 leading-normal">
+            <a href="https://www.facebook.com/groups/thehof.warzth" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 font-extrabold hover:underline">กลุ่ม Facebook Community WarzTH</a>
+          </span>
+        </div>
+      </div>
+
       {/* TRENDING ITEMS SECTION */}
       <div className="flex flex-col gap-3 w-full bg-neutral-950/20 border border-zinc-900/40 p-4 rounded-lg backdrop-blur-sm">
         <div className="flex items-center gap-2 border-b border-zinc-900/50 pb-2">
@@ -363,8 +379,8 @@ export default function Home() {
               <button
                 onClick={() => { setSortBy("trending"); setPage(1); }}
                 className={`px-2.5 py-1 rounded text-[10px] font-semibold transition-all flex items-center gap-1 ${sortBy === "trending"
-                    ? "bg-game-red text-white border border-game-red font-bold shadow-[0_0_8px_rgba(198,40,40,0.4)]"
-                    : "text-zinc-400 hover:text-white"
+                  ? "bg-game-red text-white border border-game-red font-bold shadow-[0_0_8px_rgba(198,40,40,0.4)]"
+                  : "text-zinc-400 hover:text-white"
                   }`}
               >
                 <Flame className="w-3.5 h-3.5 text-white shrink-0" />
@@ -373,8 +389,8 @@ export default function Home() {
               <button
                 onClick={() => { setSortBy("latest"); setPage(1); }}
                 className={`px-2.5 py-1 rounded text-[10px] font-semibold transition-all ${sortBy === "latest"
-                    ? "bg-zinc-850 border border-zinc-700/60 text-white font-bold"
-                    : "text-zinc-400 hover:text-white"
+                  ? "bg-zinc-850 border border-zinc-700/60 text-white font-bold"
+                  : "text-zinc-400 hover:text-white"
                   }`}
               >
                 ล่าสุด

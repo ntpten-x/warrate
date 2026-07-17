@@ -21,3 +21,5 @@ export class Item {
   @CreateDateColumn({ type: "timestamp with time zone" })
   created_at!: Date;
 }
+Object.defineProperty(Item, "name", { value: "Item", configurable: true });
+

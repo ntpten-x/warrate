@@ -20,3 +20,5 @@ export class MarketItem {
   @Column({ type: "int" })
   stock!: number;
 }
+Object.defineProperty(MarketItem, "name", { value: "MarketItem", configurable: true });
+

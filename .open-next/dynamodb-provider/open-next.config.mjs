@@ -215,7 +215,7 @@ var open_next_config_default = defineCloudflareConfig({
   dangerous: {
     buildConfig: {
       external: ["pg-cloudflare", "expo-sqlite", "fs", "path", "os", "pg"],
-      minify: true
+      minify: false
     }
   }
 });

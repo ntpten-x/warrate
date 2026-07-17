@@ -11,3 +11,5 @@ export class Unit {
   @CreateDateColumn({ type: "timestamp with time zone", default: () => "CURRENT_TIMESTAMP", name: "created_at" })
   createdAt!: Date;
 }
+Object.defineProperty(Unit, "name", { value: "Unit", configurable: true });
+

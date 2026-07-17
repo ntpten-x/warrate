@@ -1,10 +1,37 @@
 import "reflect-metadata";
-import { DataSource } from "typeorm";
+import { DataSource, EntityManager } from "typeorm";
 import { MarketItem } from "@/entities/MarketItem";
 import { Item } from "@/entities/Item";
 import { Category } from "@/entities/Category";
 import { Price } from "@/entities/Price";
 import { Unit } from "@/entities/Unit";
+
+// Patch TypeORM getMetadata and getRepository to fall back to string-based lookup in development environments
+// when class constructor references differ across Next.js API sandbox bundles.
+if (process.env.NODE_ENV !== "production") {
+  const patchTypeORM = (prototype: any, methodName: string) => {
+    const original = prototype[methodName];
+    if (original && !original.__isPatched) {
+      const patched = function (this: any, target: any) {
+        try {
+          return original.call(this, target);
+        } catch (err: any) {
+          if (err.name === "EntityMetadataNotFoundError" && typeof target === "function" && target.name) {
+            return original.call(this, target.name);
+          }
+          throw err;
+        }
+      };
+      patched.__isPatched = true;
+      prototype[methodName] = patched;
+    }
+  };
+
+  patchTypeORM(DataSource.prototype, "getMetadata");
+  patchTypeORM(DataSource.prototype, "getRepository");
+  patchTypeORM(EntityManager.prototype, "getMetadata");
+  patchTypeORM(EntityManager.prototype, "getRepository");
+}
 
 declare global {
   var dbDataSource: DataSource | undefined;
@@ -13,30 +40,23 @@ declare global {
 
 export async function initDatabase() {
   if (globalThis.dbDataSource) {
-    // Check if Next.js hot-reload (HMR) has loaded new entity class constructors
-    const registeredEntities = globalThis.dbDataSource.options.entities as any[];
-    const hasHmrReload = registeredEntities?.some((entity) => {
-      if (typeof entity === "function") {
-        if (entity.name === "MarketItem" && entity !== MarketItem) return true;
-        if (entity.name === "Item" && entity !== Item) return true;
-        if (entity.name === "Category" && entity !== Category) return true;
-        if (entity.name === "Price" && entity !== Price) return true;
-        if (entity.name === "Unit" && entity !== Unit) return true;
-      }
-      return false;
-    });
+    // Next.js dev server executes each API route in an isolated sandbox,
+    // which results in separate constructor references for Category, Item, etc.
+    // Instead of re-initializing the DataSource pool (which causes connection leaks/drops),
+    // we use our getRepository string-fallback patch above to support cross-sandbox queries.
+    const hasHmrReload = false;
 
     if (hasHmrReload) {
       console.log("🔄 Next.js HMR detected new entity definitions. Re-initializing TypeORM DataSource...");
       const oldDataSource = globalThis.dbDataSource;
       globalThis.dbDataSource = undefined;
       globalThis.dbInitPromise = undefined;
-      
+
       if (oldDataSource.isInitialized) {
         // Delay connection pool destruction by 10 seconds to let in-flight queries complete safely
         setTimeout(() => {
           console.log("🧹 Gracefully closing old HMR-replaced database connection pool...");
-          oldDataSource.destroy().catch(() => {});
+          oldDataSource.destroy().catch(() => { });
         }, 10000);
       }
     }
@@ -51,9 +71,9 @@ export async function initDatabase() {
       const oldDataSource = globalThis.dbDataSource;
       globalThis.dbDataSource = undefined;
       globalThis.dbInitPromise = undefined;
-      
+
       if (oldDataSource.isInitialized) {
-        oldDataSource.destroy().catch(() => {});
+        oldDataSource.destroy().catch(() => { });
       }
     }
   }
