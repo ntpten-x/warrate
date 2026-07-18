@@ -6,6 +6,7 @@ import { Price } from "@/entities/Price";
 import { handleApiError } from "@/lib/error";
 import { ILike, In, LessThanOrEqual } from "typeorm";
 import { redis } from "@/lib/redis";
+import { fillMissingDatesAndGroup } from "@/lib/chartUtils";
 
 export const revalidate = 15; // Cache response for 15 seconds to support high concurrency
 
@@ -125,25 +126,30 @@ export async function GET(req: NextRequest) {
     }
 
     const data = await Promise.all(items.map(async (item) => {
-      // Get last 7 price points chronologically
-      const history = await priceRepo.find({
+      // Fetch up to 30 recent price points to ensure we have a good baseline for filling missing dates
+      const rawHistory = await priceRepo.find({
         where: {
           item: { id: item.id },
           recordedAt: LessThanOrEqual(new Date()),
         },
         order: { recordedAt: "DESC" },
-        take: 7,
+        take: 30,
       });
 
-      // Reverse to chronological order (oldest to newest)
-      history.reverse();
+      const latest = rawHistory[0] || null;
+      
+      // Check if we should normalize to unit price (based on the latest record settings)
+      const normalizeToUnit = latest ? (latest.showUnitPrice !== false) : true;
+      
+      // Transform data: group by day and fill missing dates for the last 7 days
+      const historyFilled = fillMissingDatesAndGroup(rawHistory, 7, normalizeToUnit);
 
-      const latest = history[history.length - 1] || null;
-      const previous = history[history.length - 2] || null;
+      // Extract trend from the last 2 days (today and yesterday)
+      const latestDay = historyFilled[historyFilled.length - 1];
+      const previousDay = historyFilled[historyFilled.length - 2];
 
-      // Calculate unit prices to ensure fair comparison
-      const latestUnitAvg = latest ? (latest.avgPrice / (latest.unitQuantity || 1)) : 0;
-      const previousUnitAvg = previous ? (previous.avgPrice / (previous.unitQuantity || 1)) : 0;
+      const latestUnitAvg = latestDay ? latestDay.avgPrice : 0;
+      const previousUnitAvg = previousDay ? previousDay.avgPrice : 0;
 
       let trend = 0;
       if (latestUnitAvg && previousUnitAvg) {
@@ -175,14 +181,9 @@ export async function GET(req: NextRequest) {
         trend,
         views: viewsMap.get(item.id) || 0,
         
-        // Sparkline & History are fully normalized to Unit Price or Total Package Price based on flag
-        sparkline: history.map(h => (latest && latest.showUnitPrice === false) ? h.avgPrice : (h.avgPrice / (h.unitQuantity || 1))),
-        history: history.map(h => ({
-          date: new Date(h.recordedAt).toLocaleDateString("th-TH", { day: "numeric", month: "short" }),
-          avgPrice: (latest && latest.showUnitPrice === false) ? h.avgPrice : (h.avgPrice / (h.unitQuantity || 1)),
-          lowPrice: (latest && latest.showUnitPrice === false) ? h.lowPrice : (h.lowPrice / (h.unitQuantity || 1)),
-          highPrice: (latest && latest.showUnitPrice === false) ? h.highPrice : (h.highPrice / (h.unitQuantity || 1)),
-        })),
+        // Sparkline & History use the transformed 7-day continuous data
+        sparkline: historyFilled.map(h => h.avgPrice),
+        history: historyFilled,
       };
     }));
 

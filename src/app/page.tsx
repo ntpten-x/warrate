@@ -1,21 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Pagination } from "@/components/ui/pagination";
-import {
-  ResponsiveContainer,
-  ComposedChart,
-  Area,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid
-} from "recharts";
+import { ItemPriceChart } from "@/components/ItemPriceChart";
 import {
   Skull,
   Search,
@@ -711,7 +702,7 @@ export default function Home() {
                     {selectedItem.showUnitPrice !== false ? `ราคาต่อ${selectedItem.category?.unit?.name || "ชิ้น"}` : "ราคาเสนอขาย"}
                   </span>
                   <span className="font-mono text-xs sm:text-base md:text-lg font-extrabold text-emerald-400 truncate">
-                    {selectedItem.showUnitPrice !== false 
+                    {selectedItem.showUnitPrice !== false
                       ? (selectedItem.avgPrice > 0 ? `${selectedItem.avgPrice.toLocaleString(undefined, { maximumFractionDigits: 1 })} บ.` : "-")
                       : (selectedItem.totalAvgPrice > 0 ? `${selectedItem.totalAvgPrice.toLocaleString()} บ.` : "-")}
                   </span>
@@ -726,7 +717,7 @@ export default function Home() {
                     {selectedItem.showUnitPrice !== false ? `ราคาสูงสุดต่อ${selectedItem.category?.unit?.name || "ชิ้น"}` : "ราคาสูงสุด"}
                   </span>
                   <span className="font-mono text-xs sm:text-base md:text-lg font-extrabold text-blue-400 truncate">
-                    {selectedItem.showUnitPrice !== false 
+                    {selectedItem.showUnitPrice !== false
                       ? (selectedItem.highPrice > 0 ? `${selectedItem.highPrice.toLocaleString(undefined, { maximumFractionDigits: 1 })} บ.` : "-")
                       : (selectedItem.totalHighPrice > 0 ? `${selectedItem.totalHighPrice.toLocaleString()} บ.` : "-")}
                   </span>
@@ -737,7 +728,7 @@ export default function Home() {
                     {selectedItem.showUnitPrice !== false ? `ราคาต่ำสุดต่อ${selectedItem.category?.unit?.name || "ชิ้น"}` : "ราคาต่ำสุด"}
                   </span>
                   <span className="font-mono text-xs sm:text-base md:text-lg font-extrabold text-red-400 truncate">
-                    {selectedItem.showUnitPrice !== false 
+                    {selectedItem.showUnitPrice !== false
                       ? (selectedItem.lowPrice > 0 ? `${selectedItem.lowPrice.toLocaleString(undefined, { maximumFractionDigits: 1 })} บ.` : "-")
                       : (selectedItem.totalLowPrice > 0 ? `${selectedItem.totalLowPrice.toLocaleString()} บ.` : "-")}
                   </span>
@@ -756,62 +747,10 @@ export default function Home() {
                       ไม่พบข้อมูลความเคลื่อนไหวราคาประวัติเพียงพอในการคำนวณกราฟเส้น
                     </div>
                   ) : (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <ComposedChart data={selectedItem.history} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                        <defs>
-                          <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.35} />
-                            <stop offset="95%" stopColor="#10b981" stopOpacity={0.0} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#121212" />
-                        <XAxis
-                          dataKey="date"
-                          stroke="#4b5563"
-                          style={{ fontSize: "10px", fontFamily: "monospace" }}
-                        />
-                        <YAxis
-                          stroke="#4b5563"
-                          style={{ fontSize: "10px", fontFamily: "monospace" }}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: "#09090b",
-                            borderColor: "#18181b",
-                            color: "#ffffff",
-                            fontSize: "11px",
-                            fontFamily: "monospace"
-                          }}
-                        />
-                        <Line
-                          type="monotone"
-                          dataKey="highPrice"
-                          name={`ราคาสูงสุด`}
-                          stroke="#3b82f6"
-                          strokeWidth={1.5}
-                          strokeDasharray="4 4"
-                          dot={{ r: 2 }}
-                        />
-                        <Area
-                          type="monotone"
-                          dataKey="avgPrice"
-                          name={`ราคาเฉลี่ยต่อ${selectedItem.category?.unit?.name || "ชิ้น"}`}
-                          stroke="#10b981"
-                          strokeWidth={2}
-                          fillOpacity={1}
-                          fill="url(#colorPrice)"
-                        />
-                        <Line
-                          type="monotone"
-                          dataKey="lowPrice"
-                          name={`ราคาต่ำสุด`}
-                          stroke="#ef4444"
-                          strokeWidth={1.5}
-                          strokeDasharray="4 4"
-                          dot={{ r: 2 }}
-                        />
-                      </ComposedChart>
-                    </ResponsiveContainer>
+                    <ItemPriceChart
+                      data={selectedItem.history}
+                      unitName={selectedItem.category?.unit?.name || "ชิ้น"}
+                    />
                   )}
                 </div>
               </div>
