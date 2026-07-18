@@ -2,9 +2,8 @@
 
 import {
   ResponsiveContainer,
-  ComposedChart,
+  AreaChart,
   Area,
-  Line,
   XAxis,
   YAxis,
   Tooltip,
@@ -30,43 +29,58 @@ export function ItemPriceChart({ data, unitName = "ชิ้น" }: ItemPriceCha
     );
   }
 
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    return (
+      <div className="bg-[#09090b]/95 border border-[#27272a] p-3 rounded-lg shadow-xl backdrop-blur-md">
+        <p className="text-[#a1a1aa] text-[10px] mb-2 font-mono">{label}</p>
+        <div className="space-y-1.5 font-mono text-[11px]">
+          <div className="flex items-center justify-between gap-6">
+            <span className="text-[#3b82f6]">ราคาสูงสุด:</span>
+            <span className="font-semibold text-white">{data.highPrice?.toLocaleString()}</span>
+          </div>
+          <div className="flex items-center justify-between gap-6">
+            <span className="text-[#10b981]">ราคาเฉลี่ย:</span>
+            <span className="font-semibold text-white">{data.avgPrice?.toLocaleString()}</span>
+          </div>
+          <div className="flex items-center justify-between gap-6">
+            <span className="text-[#ef4444]">ราคาต่ำสุด:</span>
+            <span className="font-semibold text-white">{data.lowPrice?.toLocaleString()}</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <ComposedChart data={data} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+      <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
         <defs>
           <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
             <stop offset="5%" stopColor="#10b981" stopOpacity={0.35} />
             <stop offset="95%" stopColor="#10b981" stopOpacity={0.0} />
           </linearGradient>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" stroke="#121212" />
+        <CartesianGrid strokeDasharray="4 4" stroke="#27272a" vertical={false} />
         <XAxis
           dataKey="date"
-          stroke="#4b5563"
-          style={{ fontSize: "10px", fontFamily: "monospace" }}
+          stroke="#71717a"
+          tickLine={false}
+          axisLine={false}
+          tick={{ fontSize: 10, fontFamily: "monospace" }}
+          dy={10}
         />
         <YAxis
-          stroke="#4b5563"
-          style={{ fontSize: "10px", fontFamily: "monospace" }}
+          stroke="#71717a"
+          tickLine={false}
+          axisLine={false}
+          tick={{ fontSize: 10, fontFamily: "monospace" }}
+          dx={-10}
         />
-        <Tooltip
-          contentStyle={{
-            backgroundColor: "#09090b",
-            borderColor: "#18181b",
-            color: "#ffffff",
-            fontSize: "11px",
-            fontFamily: "monospace"
-          }}
-        />
-        <Line
-          type="monotone"
-          dataKey="highPrice"
-          name={`ราคาสูงสุด`}
-          stroke="#3b82f6"
-          strokeWidth={1.5}
-          strokeDasharray="4 4"
-          dot={{ r: 2 }}
-        />
+        <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#27272a', strokeWidth: 1, strokeDasharray: '4 4' }} />
         <Area
           type="monotone"
           dataKey="avgPrice"
@@ -75,17 +89,9 @@ export function ItemPriceChart({ data, unitName = "ชิ้น" }: ItemPriceCha
           strokeWidth={2}
           fillOpacity={1}
           fill="url(#colorPrice)"
+          activeDot={{ r: 4, fill: "#10b981", stroke: "#fff", strokeWidth: 2 }}
         />
-        <Line
-          type="monotone"
-          dataKey="lowPrice"
-          name={`ราคาต่ำสุด`}
-          stroke="#ef4444"
-          strokeWidth={1.5}
-          strokeDasharray="4 4"
-          dot={{ r: 2 }}
-        />
-      </ComposedChart>
+      </AreaChart>
     </ResponsiveContainer>
   );
 }
