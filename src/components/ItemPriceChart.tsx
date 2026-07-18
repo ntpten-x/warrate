@@ -38,15 +38,15 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         <div className="space-y-1.5 font-mono text-[11px]">
           <div className="flex items-center justify-between gap-6">
             <span className="text-[#3b82f6]">ราคาสูงสุด:</span>
-            <span className="font-semibold text-white">{data.highPrice?.toLocaleString()}</span>
+            <span className="font-semibold text-white">{data.highPrice?.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
           </div>
           <div className="flex items-center justify-between gap-6">
             <span className="text-[#10b981]">ราคาเฉลี่ย:</span>
-            <span className="font-semibold text-white">{data.avgPrice?.toLocaleString()}</span>
+            <span className="font-semibold text-white">{data.avgPrice?.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
           </div>
           <div className="flex items-center justify-between gap-6">
             <span className="text-[#ef4444]">ราคาต่ำสุด:</span>
-            <span className="font-semibold text-white">{data.lowPrice?.toLocaleString()}</span>
+            <span className="font-semibold text-white">{data.lowPrice?.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
           </div>
         </div>
       </div>

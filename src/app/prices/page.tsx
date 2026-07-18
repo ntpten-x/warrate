@@ -304,7 +304,7 @@ function PricesContent() {
       const percentage = Math.round(Math.abs(ratio - 1) * 100);
       const classifier = items.find(i => i.id === formItemId)?.category?.unit?.name || "ชิ้น";
       setWarningMessage(
-        `ราคาต่อ${classifier}เฉลี่ยใหม่ (${newUnitAvg.toLocaleString()} บาท) แตกต่างจากราคาก่อนหน้า (${oldUnitAvg.toLocaleString()} บาท) ถึง ${percentage}% กรุณายืนยันความถูกต้องอีกครั้ง`
+        `ราคาต่อ${classifier}เฉลี่ยใหม่ (${newUnitAvg.toLocaleString(undefined, { maximumFractionDigits: 2 })} บาท) แตกต่างจากราคาก่อนหน้า (${oldUnitAvg.toLocaleString(undefined, { maximumFractionDigits: 2 })} บาท) ถึง ${percentage}% กรุณายืนยันความถูกต้องอีกครั้ง`
       );
       return true;
     }
@@ -518,7 +518,7 @@ function PricesContent() {
                 className="text-[9px] font-mono fill-zinc-500 text-right"
                 textAnchor="end"
               >
-                {Math.round(val).toLocaleString()}
+                {val.toLocaleString(undefined, { maximumFractionDigits: 2 })}
               </text>
             </g>
           );
@@ -557,7 +557,7 @@ function PricesContent() {
               />
               {/* Tooltip trigger details */}
               <title>
-                {`วันที่: ${rec.date}\nต่ำสุด: ${rec.lowPrice.toLocaleString()} บ.\nเฉลี่ย: ${rec.avgPrice.toLocaleString()} บ.\nสูงสุด: ${rec.highPrice.toLocaleString()} บ.`}
+                {`วันที่: ${rec.date}\nต่ำสุด: ${rec.lowPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })} บ.\nเฉลี่ย: ${rec.avgPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })} บ.\nสูงสุด: ${rec.highPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })} บ.`}
               </title>
             </g>
           );
@@ -725,9 +725,9 @@ function PricesContent() {
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-center font-mono text-red-400 font-bold">{record.lowPrice.toLocaleString()} บาท</td>
-                      <td className="px-6 py-4 text-center font-mono text-game-green font-extrabold">{record.avgPrice.toLocaleString()} บาท</td>
-                      <td className="px-6 py-4 text-center font-mono text-blue-400 font-bold">{record.highPrice.toLocaleString()} บาท</td>
+                      <td className="px-6 py-4 text-center font-mono text-red-400 font-bold">{record.lowPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })} บาท</td>
+                      <td className="px-6 py-4 text-center font-mono text-game-green font-extrabold">{record.avgPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })} บาท</td>
+                      <td className="px-6 py-4 text-center font-mono text-blue-400 font-bold">{record.highPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })} บาท</td>
                       <td className="px-6 py-4">
                         <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-zinc-900 border border-zinc-800 text-zinc-400">
                           {record.source}
@@ -796,19 +796,19 @@ function PricesContent() {
                   <div className="flex flex-col gap-0.5 min-w-0">
                     <span className="text-[9px] text-zinc-500 uppercase font-semibold truncate">ต่ำสุด</span>
                     <span className="text-red-400 font-mono font-bold text-xs truncate">
-                      {record.lowPrice.toLocaleString()} บ.
+                      {record.lowPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })} บ.
                     </span>
                   </div>
                   <div className="flex flex-col gap-0.5 min-w-0 bg-emerald-500/5 rounded py-0.5">
                     <span className="text-[9px] text-emerald-500 uppercase font-semibold truncate">ราคาขาย</span>
                     <span className="text-game-green font-mono font-extrabold text-xs truncate">
-                      {record.avgPrice.toLocaleString()} บ.
+                      {record.avgPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })} บ.
                     </span>
                   </div>
                   <div className="flex flex-col gap-0.5 min-w-0">
                     <span className="text-[9px] text-zinc-500 uppercase font-semibold truncate">สูงสุด</span>
                     <span className="text-blue-400 font-mono font-bold text-xs truncate">
-                      {record.highPrice.toLocaleString()} บ.
+                      {record.highPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })} บ.
                     </span>
                   </div>
                 </div>
@@ -1021,7 +1021,7 @@ function PricesContent() {
                         const min = Math.min(...parsed);
                         const max = Math.max(...parsed);
                         const sum = parsed.reduce((a, b) => a + b, 0);
-                        const avg = Math.round(sum / parsed.length);
+                        const avg = Number((sum / parsed.length).toFixed(2));
                         
                         setFormLowPrice(String(min));
                         setFormHighPrice(String(max));
@@ -1043,6 +1043,7 @@ function PricesContent() {
                   <label className="font-gaming text-[11px] text-zinc-400 uppercase font-semibold">ราคาต่ำสุด</label>
                   <Input
                     type="number"
+                    step="any"
                     value={formLowPrice}
                     onChange={(e) => {
                       setFormLowPrice(e.target.value);
@@ -1058,6 +1059,7 @@ function PricesContent() {
                   <label className="font-gaming text-[11px] text-zinc-400 uppercase font-semibold">ราคาซื้อขาย</label>
                   <Input
                     type="number"
+                    step="any"
                     value={formAvgPrice}
                     onChange={(e) => {
                       setFormAvgPrice(e.target.value);
@@ -1073,6 +1075,7 @@ function PricesContent() {
                   <label className="font-gaming text-[11px] text-zinc-400 uppercase font-semibold">ราคาสูงสุด</label>
                   <Input
                     type="number"
+                    step="any"
                     value={formHighPrice}
                     onChange={(e) => {
                       setFormHighPrice(e.target.value);

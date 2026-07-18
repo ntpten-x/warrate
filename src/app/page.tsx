@@ -605,7 +605,7 @@ export default function Home() {
                   <div className="flex flex-col gap-0.5 min-w-0">
                     <span className="text-[9px] text-zinc-500 uppercase font-semibold truncate">เฉลี่ย/หน่วย</span>
                     <span className="font-mono text-xs font-semibold text-amber-100 truncate">
-                      {item.showUnitPrice !== false && item.avgPrice > 0 ? `${item.avgPrice.toLocaleString(undefined, { maximumFractionDigits: 1 })} บ.` : "-"}
+                      {item.showUnitPrice !== false && item.avgPrice > 0 ? `${item.avgPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })} บ.` : "-"}
                     </span>
                   </div>
                 </div>
@@ -703,7 +703,7 @@ export default function Home() {
                   </span>
                   <span className="font-mono text-xs sm:text-base md:text-lg font-extrabold text-emerald-400 truncate">
                     {selectedItem.showUnitPrice !== false
-                      ? (selectedItem.avgPrice > 0 ? `${selectedItem.avgPrice.toLocaleString(undefined, { maximumFractionDigits: 1 })} บ.` : "-")
+                      ? (selectedItem.avgPrice > 0 ? `${selectedItem.avgPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })} บ.` : "-")
                       : (selectedItem.totalAvgPrice > 0 ? `${selectedItem.totalAvgPrice.toLocaleString()} บ.` : "-")}
                   </span>
                   {selectedItem.showUnitPrice !== false && selectedItem.avgPrice > 0 && (
@@ -718,7 +718,7 @@ export default function Home() {
                   </span>
                   <span className="font-mono text-xs sm:text-base md:text-lg font-extrabold text-blue-400 truncate">
                     {selectedItem.showUnitPrice !== false
-                      ? (selectedItem.highPrice > 0 ? `${selectedItem.highPrice.toLocaleString(undefined, { maximumFractionDigits: 1 })} บ.` : "-")
+                      ? (selectedItem.highPrice > 0 ? `${selectedItem.highPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })} บ.` : "-")
                       : (selectedItem.totalHighPrice > 0 ? `${selectedItem.totalHighPrice.toLocaleString()} บ.` : "-")}
                   </span>
                   <span className="text-[8px] sm:text-[9px] text-zinc-500 truncate">สูงสุดที่พบ</span>
@@ -729,7 +729,7 @@ export default function Home() {
                   </span>
                   <span className="font-mono text-xs sm:text-base md:text-lg font-extrabold text-red-400 truncate">
                     {selectedItem.showUnitPrice !== false
-                      ? (selectedItem.lowPrice > 0 ? `${selectedItem.lowPrice.toLocaleString(undefined, { maximumFractionDigits: 1 })} บ.` : "-")
+                      ? (selectedItem.lowPrice > 0 ? `${selectedItem.lowPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })} บ.` : "-")
                       : (selectedItem.totalLowPrice > 0 ? `${selectedItem.totalLowPrice.toLocaleString()} บ.` : "-")}
                   </span>
                   <span className="text-[8px] sm:text-[9px] text-zinc-500 truncate">ต่ำสุดที่พบ</span>
