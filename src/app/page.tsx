@@ -699,7 +699,7 @@ export default function Home() {
               <div className="grid grid-cols-3 gap-2 sm:gap-3 text-center">
                 <div className="bg-black/40 border border-zinc-900/60 rounded p-2 sm:p-3 flex flex-col gap-0.5 sm:gap-1 justify-center min-w-0">
                   <span className="text-[9px] sm:text-[10px] text-zinc-500 uppercase font-gaming font-semibold truncate">
-                    {selectedItem.showUnitPrice !== false ? `ราคาต่อ${selectedItem.category?.unit?.name || "ชิ้น"}` : "ราคาเสนอขาย"}
+                    {selectedItem.showUnitPrice !== false ? `ราคาต่อ${selectedItem.category?.unit?.name || "ชิ้น"}` : "ราคาขาย"}
                   </span>
                   <span className="font-mono text-xs sm:text-base md:text-lg font-extrabold text-emerald-400 truncate">
                     {selectedItem.showUnitPrice !== false
