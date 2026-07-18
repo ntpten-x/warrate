@@ -137,19 +137,17 @@ export async function GET(req: NextRequest) {
       });
 
       const latest = rawHistory[0] || null;
+      const previous = rawHistory[1] || null;
       
       // Check if we should normalize to unit price (based on the latest record settings)
       const normalizeToUnit = latest ? (latest.showUnitPrice !== false) : true;
       
-      // Transform data: group by day and fill missing dates for the last 7 days
+      // Transform data: group by day and fill missing dates dynamically
       const historyFilled = fillMissingDatesAndGroup(rawHistory, 7, normalizeToUnit);
 
-      // Extract trend from the last 2 days (today and yesterday)
-      const latestDay = historyFilled[historyFilled.length - 1];
-      const previousDay = historyFilled[historyFilled.length - 2];
-
-      const latestUnitAvg = latestDay ? latestDay.avgPrice : 0;
-      const previousUnitAvg = previousDay ? previousDay.avgPrice : 0;
+      // Calculate unit prices to ensure fair comparison
+      const latestUnitAvg = latest ? (latest.avgPrice / (latest.unitQuantity || 1)) : 0;
+      const previousUnitAvg = previous ? (previous.avgPrice / (previous.unitQuantity || 1)) : 0;
 
       let trend = 0;
       if (latestUnitAvg && previousUnitAvg) {

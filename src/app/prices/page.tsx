@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { parseClientError } from "@/lib/error";
+import { fillMissingDatesAndGroup } from "@/lib/chartUtils";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -433,7 +434,9 @@ function PricesContent() {
 
   // SVG Custom line chart logic computed from selected item history records
   const svgChart = useMemo(() => {
-    if (historyPrices.length < 2) {
+    const processedHistory = fillMissingDatesAndGroup(historyPrices, 7, false);
+
+    if (processedHistory.length < 2) {
       return (
         <div className="h-full flex items-center justify-center text-xs text-zinc-500 font-gaming">
           บันทึกประวัติราคาอย่างน้อย 2 รายการเพื่อสร้างกราฟเทรนด์
@@ -449,14 +452,14 @@ function PricesContent() {
     const chartHeight = height - padding * 2;
 
     // Retrieve price min and max taking all bounds into account
-    const allPrices = historyPrices.flatMap((p) => [p.lowPrice, p.avgPrice, p.highPrice]);
+    const allPrices = processedHistory.flatMap((p) => [p.lowPrice, p.avgPrice, p.highPrice]);
     const minVal = Math.min(...allPrices) * 0.95; // 5% cushion under
     const maxVal = Math.max(...allPrices) * 1.05; // 5% cushion above
     const valRange = maxVal - minVal || 1;
 
     // Coordinate converters
     const getX = (idx: number) => {
-      return padding + (idx / (historyPrices.length - 1)) * chartWidth;
+      return padding + (idx / (processedHistory.length - 1)) * chartWidth;
     };
 
     const getY = (val: number) => {
@@ -464,17 +467,17 @@ function PricesContent() {
     };
 
     // Construct path line strings
-    const points = historyPrices.map((p, idx) => ({ x: getX(idx), y: getY(p.avgPrice) }));
+    const points = processedHistory.map((p, idx) => ({ x: getX(idx), y: getY(p.avgPrice) }));
     const pathD = points.reduce((acc, p, idx) => {
       return idx === 0 ? `M ${p.x} ${p.y}` : `${acc} L ${p.x} ${p.y}`;
     }, "");
 
-    const highPoints = historyPrices.map((p, idx) => ({ x: getX(idx), y: getY(p.highPrice) }));
+    const highPoints = processedHistory.map((p, idx) => ({ x: getX(idx), y: getY(p.highPrice) }));
     const highPathD = highPoints.reduce((acc, p, idx) => {
       return idx === 0 ? `M ${p.x} ${p.y}` : `${acc} L ${p.x} ${p.y}`;
     }, "");
 
-    const lowPoints = historyPrices.map((p, idx) => ({ x: getX(idx), y: getY(p.lowPrice) }));
+    const lowPoints = processedHistory.map((p, idx) => ({ x: getX(idx), y: getY(p.lowPrice) }));
     const lowPathD = lowPoints.reduce((acc, p, idx) => {
       return idx === 0 ? `M ${p.x} ${p.y}` : `${acc} L ${p.x} ${p.y}`;
     }, "");
@@ -541,7 +544,7 @@ function PricesContent() {
 
         {/* Interactive Data dots with indicators */}
         {points.map((p, idx) => {
-          const rec = historyPrices[idx];
+          const rec = processedHistory[idx];
           return (
             <g key={idx} className="group/dot cursor-pointer">
               <circle
@@ -554,16 +557,16 @@ function PricesContent() {
               />
               {/* Tooltip trigger details */}
               <title>
-                {`วันที่: ${new Date(rec.recordedAt).toLocaleDateString("th-TH")}\nต่ำสุด: ${rec.lowPrice.toLocaleString()} บ.\nเฉลี่ย: ${rec.avgPrice.toLocaleString()} บ.\nสูงสุด: ${rec.highPrice.toLocaleString()} บ.\nแหล่งที่มา: ${rec.source}`}
+                {`วันที่: ${rec.date}\nต่ำสุด: ${rec.lowPrice.toLocaleString()} บ.\nเฉลี่ย: ${rec.avgPrice.toLocaleString()} บ.\nสูงสุด: ${rec.highPrice.toLocaleString()} บ.`}
               </title>
             </g>
           );
         })}
 
         {/* X Axis Dates labels */}
-        {historyPrices.map((p, idx) => {
+        {processedHistory.map((p, idx) => {
           // Render label only for first, middle and last elements to prevent labels overlaying
-          if (idx === 0 || idx === Math.floor(historyPrices.length / 2) || idx === historyPrices.length - 1) {
+          if (idx === 0 || idx === Math.floor(processedHistory.length / 2) || idx === processedHistory.length - 1) {
             return (
               <text
                 key={idx}
@@ -572,7 +575,7 @@ function PricesContent() {
                 className="text-[9px] fill-zinc-500"
                 textAnchor="middle"
               >
-                {new Date(p.recordedAt).toLocaleDateString("th-TH", { day: "numeric", month: "short" })}
+                {p.date}
               </text>
             );
           }
