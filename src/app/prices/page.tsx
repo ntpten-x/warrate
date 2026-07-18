@@ -93,6 +93,7 @@ function PricesContent() {
 
   // Latest price record cache for deviation checking & template copy
   const [latestCachedPrice, setLatestCachedPrice] = useState<PriceRecord | null>(null);
+  const [recentPricesCache, setRecentPricesCache] = useState<PriceRecord[]>([]);
 
   const [formUnitQuantity, setFormUnitQuantity] = useState("1");
   const [formIsBulk, setFormIsBulk] = useState(false);
@@ -206,6 +207,7 @@ function PricesContent() {
   useEffect(() => {
     if (!formItemId) {
       setLatestCachedPrice(null);
+      setRecentPricesCache([]);
       return;
     }
     fetch(`/api/prices?latest=true&itemId=${formItemId}`)
@@ -214,6 +216,14 @@ function PricesContent() {
         setLatestCachedPrice(data);
       })
       .catch((err) => console.error("Error getting latest price:", err));
+
+    // Load recent history (last 10 records) to compute smart min/max for quick calculator
+    fetch(`/api/prices?limit=10&itemId=${formItemId}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        setRecentPricesCache(data?.data || []);
+      })
+      .catch((err) => console.error("Error getting recent prices:", err));
   }, [formItemId]);
 
   // Copy Template Handler
@@ -438,10 +448,10 @@ function PricesContent() {
     const chartWidth = width - padding * 2;
     const chartHeight = height - padding * 2;
 
-    // Retrieve price min and max
-    const pricesList = historyPrices.map((p) => p.avgPrice);
-    const minVal = Math.min(...pricesList) * 0.95; // 5% cushion under
-    const maxVal = Math.max(...pricesList) * 1.05; // 5% cushion above
+    // Retrieve price min and max taking all bounds into account
+    const allPrices = historyPrices.flatMap((p) => [p.lowPrice, p.avgPrice, p.highPrice]);
+    const minVal = Math.min(...allPrices) * 0.95; // 5% cushion under
+    const maxVal = Math.max(...allPrices) * 1.05; // 5% cushion above
     const valRange = maxVal - minVal || 1;
 
     // Coordinate converters
@@ -456,6 +466,16 @@ function PricesContent() {
     // Construct path line strings
     const points = historyPrices.map((p, idx) => ({ x: getX(idx), y: getY(p.avgPrice) }));
     const pathD = points.reduce((acc, p, idx) => {
+      return idx === 0 ? `M ${p.x} ${p.y}` : `${acc} L ${p.x} ${p.y}`;
+    }, "");
+
+    const highPoints = historyPrices.map((p, idx) => ({ x: getX(idx), y: getY(p.highPrice) }));
+    const highPathD = highPoints.reduce((acc, p, idx) => {
+      return idx === 0 ? `M ${p.x} ${p.y}` : `${acc} L ${p.x} ${p.y}`;
+    }, "");
+
+    const lowPoints = historyPrices.map((p, idx) => ({ x: getX(idx), y: getY(p.lowPrice) }));
+    const lowPathD = lowPoints.reduce((acc, p, idx) => {
       return idx === 0 ? `M ${p.x} ${p.y}` : `${acc} L ${p.x} ${p.y}`;
     }, "");
 
@@ -513,6 +533,12 @@ function PricesContent() {
           filter="url(#glow)"
         />
 
+        {/* High Price line */}
+        <path d={highPathD} fill="none" stroke="#3b82f6" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.6" />
+        
+        {/* Low Price line */}
+        <path d={lowPathD} fill="none" stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.6" />
+
         {/* Interactive Data dots with indicators */}
         {points.map((p, idx) => {
           const rec = historyPrices[idx];
@@ -528,7 +554,7 @@ function PricesContent() {
               />
               {/* Tooltip trigger details */}
               <title>
-                {`วันที่: ${new Date(rec.recordedAt).toLocaleDateString("th-TH")}\nเฉลี่ย: ${rec.avgPrice.toLocaleString()} บาท\nแหล่งที่มา: ${rec.source}`}
+                {`วันที่: ${new Date(rec.recordedAt).toLocaleDateString("th-TH")}\nต่ำสุด: ${rec.lowPrice.toLocaleString()} บ.\nเฉลี่ย: ${rec.avgPrice.toLocaleString()} บ.\nสูงสุด: ${rec.highPrice.toLocaleString()} บ.\nแหล่งที่มา: ${rec.source}`}
               </title>
             </g>
           );
@@ -978,14 +1004,26 @@ function PricesContent() {
                       .map(Number);
                     
                     if (parsed.length > 0) {
-                      const min = Math.min(...parsed);
-                      const max = Math.max(...parsed);
-                      const sum = parsed.reduce((a, b) => a + b, 0);
-                      const avg = Math.round(sum / parsed.length);
-                      
-                      setFormLowPrice(String(min));
-                      setFormHighPrice(String(max));
-                      setFormAvgPrice(String(avg));
+                      if (parsed.length === 1) {
+                        const newPrice = parsed[0];
+                        // If single price is provided, use recent history to find the realistic bounds
+                        const recentAvgs = recentPricesCache.map(p => p.avgPrice);
+                        const min = Math.min(newPrice, ...recentAvgs);
+                        const max = Math.max(newPrice, ...recentAvgs);
+                        
+                        setFormLowPrice(String(min));
+                        setFormHighPrice(String(max));
+                        setFormAvgPrice(String(newPrice));
+                      } else {
+                        const min = Math.min(...parsed);
+                        const max = Math.max(...parsed);
+                        const sum = parsed.reduce((a, b) => a + b, 0);
+                        const avg = Math.round(sum / parsed.length);
+                        
+                        setFormLowPrice(String(min));
+                        setFormHighPrice(String(max));
+                        setFormAvgPrice(String(avg));
+                      }
                       setShowDeviationWarning(false);
                     }
                   }}

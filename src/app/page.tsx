@@ -8,8 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Pagination } from "@/components/ui/pagination";
 import {
   ResponsiveContainer,
-  AreaChart,
+  ComposedChart,
   Area,
+  Line,
   XAxis,
   YAxis,
   Tooltip,
@@ -756,7 +757,7 @@ export default function Home() {
                     </div>
                   ) : (
                     <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={selectedItem.history} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                      <ComposedChart data={selectedItem.history} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                         <defs>
                           <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor="#10b981" stopOpacity={0.35} />
@@ -782,6 +783,15 @@ export default function Home() {
                             fontFamily: "monospace"
                           }}
                         />
+                        <Line
+                          type="monotone"
+                          dataKey="highPrice"
+                          name={`ราคาสูงสุด`}
+                          stroke="#3b82f6"
+                          strokeWidth={1.5}
+                          strokeDasharray="4 4"
+                          dot={{ r: 2 }}
+                        />
                         <Area
                           type="monotone"
                           dataKey="avgPrice"
@@ -791,7 +801,16 @@ export default function Home() {
                           fillOpacity={1}
                           fill="url(#colorPrice)"
                         />
-                      </AreaChart>
+                        <Line
+                          type="monotone"
+                          dataKey="lowPrice"
+                          name={`ราคาต่ำสุด`}
+                          stroke="#ef4444"
+                          strokeWidth={1.5}
+                          strokeDasharray="4 4"
+                          dot={{ r: 2 }}
+                        />
+                      </ComposedChart>
                     </ResponsiveContainer>
                   )}
                 </div>
