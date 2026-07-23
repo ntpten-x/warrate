@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { useItems, Item } from "@/components/providers/items-context";
+import { formatImageUrl, isValidImageUrl } from "@/lib/imageUtils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -130,7 +131,7 @@ export default function ItemsPage() {
           id: editingItem.id,
           name: formName.trim(),
           categoryId: formCategoryId,
-          image_url: formImageUrl.trim(),
+          image_url: formatImageUrl(formImageUrl.trim()),
         });
         toast.success("บันทึกการแก้ไขไอเทมสำเร็จ!");
       } else {
@@ -138,7 +139,7 @@ export default function ItemsPage() {
         await createItem({
           name: formName.trim(),
           categoryId: formCategoryId,
-          image_url: formImageUrl.trim(),
+          image_url: formatImageUrl(formImageUrl.trim()),
         });
         toast.success("เพิ่มไอเทมใหม่เรียบร้อยแล้ว!");
       }
@@ -274,11 +275,12 @@ export default function ItemsPage() {
             >
               {/* Item Image Slot */}
               <div className="relative aspect-video w-full bg-black/80 flex items-center justify-center overflow-hidden border-b border-zinc-900">
-                {item.image_url ? (
+                {isValidImageUrl(item.image_url) ? (
                   <Image
-                    src={item.image_url}
+                    src={formatImageUrl(item.image_url)}
                     alt={item.name}
                     fill
+                    unoptimized
                     sizes="(max-width: 768px) 100vw, 256px"
                     className="object-contain p-1 group-hover:scale-110 transition-transform duration-300"
                   />
@@ -347,8 +349,8 @@ export default function ItemsPage() {
                     <td className="px-6 py-4 font-mono text-[11px] text-zinc-500 font-bold">{(page - 1) * limit + idx + 1}</td>
                     <td className="px-6 py-2">
                       <div className="w-16 h-12 rounded bg-black/60 border border-zinc-800 flex items-center justify-center overflow-hidden p-1 relative">
-                        {item.image_url ? (
-                          <Image src={item.image_url} alt={item.name} fill sizes="64px" className="object-contain p-1" />
+                        {isValidImageUrl(item.image_url) ? (
+                          <Image src={formatImageUrl(item.image_url)} alt={item.name} fill unoptimized sizes="64px" className="object-contain p-1" />
                         ) : (
                           <ImageIcon className="w-4 h-4 text-zinc-700" />
                         )}
@@ -470,18 +472,17 @@ export default function ItemsPage() {
               </div>
 
               {/* Image Preview */}
-              {formImageUrl.trim() && (
+              {isValidImageUrl(formImageUrl) && (
                 <div className="flex flex-col gap-1.5">
                   <span className="font-gaming text-[10px] text-zinc-500 uppercase font-semibold">Image Preview</span>
                   <div className="w-full h-32 rounded bg-black/60 border border-zinc-900 flex items-center justify-center p-2 overflow-hidden relative">
                     <Image
-                      src={formImageUrl}
+                      src={formatImageUrl(formImageUrl)}
                       alt="Preview"
                       fill
                       unoptimized
                       sizes="112px"
                       className="object-contain p-2"
-                      onError={(e) => { (e.target as HTMLImageElement).src = "" }}
                     />
                   </div>
                 </div>

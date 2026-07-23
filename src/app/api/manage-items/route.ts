@@ -3,6 +3,7 @@ import { initDatabase } from "@/lib/db";
 import { Item } from "@/entities/Item";
 import { Category } from "@/entities/Category";
 import { handleApiError, AppError, verifyAuth } from "@/lib/error";
+import { formatImageUrl } from "@/lib/imageUtils";
 import { ILike } from "typeorm";
 
 export const dynamic = "force-dynamic";
@@ -75,7 +76,7 @@ export async function POST(req: NextRequest) {
     const newItem = itemRepo.create({
       name: name.trim(),
       category,
-      image_url: image_url || "",
+      image_url: formatImageUrl(image_url),
     });
     
     const savedItem = await itemRepo.save(newItem);
@@ -110,7 +111,7 @@ export async function PUT(req: NextRequest) {
 
     item.name = name.trim();
     item.category = category;
-    item.image_url = image_url || "";
+    item.image_url = formatImageUrl(image_url);
     
     const updatedItem = await itemRepo.save(item);
     return NextResponse.json(updatedItem);

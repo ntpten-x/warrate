@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import { formatImageUrl, isValidImageUrl } from "@/lib/imageUtils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -305,8 +306,8 @@ export default function Home() {
 
                   {/* Item Image */}
                   <div className="w-16 h-16 rounded bg-black/60 border border-zinc-800 flex items-center justify-center overflow-hidden shrink-0 group-hover:border-game-red transition-colors p-1 relative">
-                    {item.image_url ? (
-                      <Image src={item.image_url} alt={item.name} fill sizes="64px" className="object-contain p-1" />
+                    {isValidImageUrl(item.image_url) ? (
+                      <Image src={formatImageUrl(item.image_url)} alt={item.name} fill unoptimized sizes="64px" className="object-contain p-1" />
                     ) : (
                       <Skull className="w-4 h-4 text-zinc-700" />
                     )}
@@ -469,8 +470,8 @@ export default function Home() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-4">
                           <div className="w-24 h-18 rounded bg-black/60 border border-zinc-800 flex items-center justify-center overflow-hidden shrink-0 group-hover:border-game-red transition-colors p-1.5 relative">
-                            {item.image_url ? (
-                              <Image src={item.image_url} alt={item.name} fill sizes="96px" className="object-contain p-1.5" />
+                            {isValidImageUrl(item.image_url) ? (
+                              <Image src={formatImageUrl(item.image_url)} alt={item.name} fill unoptimized sizes="96px" className="object-contain p-1.5" />
                             ) : (
                               <Skull className="w-4 h-4 text-zinc-700" />
                             )}
@@ -565,8 +566,8 @@ export default function Home() {
                     {(page - 1) * limit + idx + 1}
                   </div>
                   <div className="w-14 h-11 rounded bg-black/60 border border-zinc-850 flex items-center justify-center overflow-hidden p-1 shrink-0 relative">
-                    {item.image_url ? (
-                      <Image src={item.image_url} alt={item.name} fill sizes="56px" className="object-contain p-1" />
+                    {isValidImageUrl(item.image_url) ? (
+                      <Image src={formatImageUrl(item.image_url)} alt={item.name} fill unoptimized sizes="56px" className="object-contain p-1" />
                     ) : (
                       <Skull className="w-3.5 h-3.5 text-zinc-700" />
                     )}
@@ -651,8 +652,8 @@ export default function Home() {
             <div className="p-5 border-b border-zinc-950 flex justify-between items-center text-left">
               <div className="flex items-center gap-3">
                 <div className="w-20 h-16 rounded bg-black/80 border border-zinc-800 flex items-center justify-center overflow-hidden p-1 shrink-0 relative">
-                  {selectedItem.image_url ? (
-                    <Image src={selectedItem.image_url} alt={selectedItem.name} fill sizes="80px" className="object-contain p-1" />
+                  {isValidImageUrl(selectedItem.image_url) ? (
+                    <Image src={formatImageUrl(selectedItem.image_url)} alt={selectedItem.name} fill unoptimized sizes="80px" className="object-contain p-1" />
                   ) : (
                     <Skull className="w-4 h-4 text-zinc-700" />
                   )}

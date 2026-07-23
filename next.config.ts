@@ -3,7 +3,20 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   serverExternalPackages: ["typeorm"],
   images: {
+    unoptimized: true,
     remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+      },
+      {
+        protocol: "https",
+        hostname: "*.googleusercontent.com",
+      },
+      {
+        protocol: "https",
+        hostname: "drive.google.com",
+      },
       {
         protocol: "https",
         hostname: "images.unsplash.com",
@@ -15,6 +28,14 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "moneychat.co.th",
+      },
+      {
+        protocol: "https",
+        hostname: "**",
+      },
+      {
+        protocol: "http",
+        hostname: "**",
       },
     ],
   },
