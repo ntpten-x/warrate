@@ -98,7 +98,7 @@ function PricesContent() {
 
   const [formUnitQuantity, setFormUnitQuantity] = useState("1");
   const [formIsBulk, setFormIsBulk] = useState(false);
-  const [formShowUnitPrice, setFormShowUnitPrice] = useState(true);
+  const [formShowUnitPrice, setFormShowUnitPrice] = useState(false);
 
   // Delete Confirm State
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
@@ -184,6 +184,9 @@ function PricesContent() {
           .toISOString()
           .slice(0, 16);
         setFormRecordedAt(formattedDate);
+        setFormUnitQuantity("1");
+        setFormIsBulk(false);
+        setFormShowUnitPrice(false);
         setFormError(null);
         setShowDeviationWarning(false);
         setModalOpen(true);
@@ -255,7 +258,7 @@ function PricesContent() {
     setFormNote("อ้างอิงจาก กลุ่ม Facebook Community WarzTH");
     setFormUnitQuantity("1");
     setFormIsBulk(false);
-    setFormShowUnitPrice(true);
+    setFormShowUnitPrice(false);
     // Set default recorded datetime to local timezone string format
     const localNow = new Date();
     const formattedDate = new Date(localNow.getTime() - localNow.getTimezoneOffset() * 60000)
