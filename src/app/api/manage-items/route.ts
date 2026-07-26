@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
   try {
     await verifyAuth(req);
 
-    const { name, categoryId, image_url } = await req.json();
+    const { name, categoryId, image_url, is_use } = await req.json();
     if (!name || !categoryId) {
       throw new AppError("กรุณาระบุชื่อและหมวดหมู่ไอเทมให้ครบถ้วน", 400, "VALIDATION_ERROR");
     }
@@ -77,6 +77,7 @@ export async function POST(req: NextRequest) {
       name: name.trim(),
       category,
       image_url: formatImageUrl(image_url),
+      is_use: is_use === undefined ? true : !!is_use,
     });
     
     const savedItem = await itemRepo.save(newItem);
@@ -90,9 +91,9 @@ export async function PUT(req: NextRequest) {
   try {
     await verifyAuth(req);
 
-    const { id, name, categoryId, image_url } = await req.json();
-    if (!id || !name || !categoryId) {
-      throw new AppError("ข้อมูลสำหรับแก้ไขไม่ครบถ้วน (id, name, categoryId)", 400, "VALIDATION_ERROR");
+    const { id, name, categoryId, image_url, is_use } = await req.json();
+    if (!id) {
+      throw new AppError("ข้อมูลสำหรับแก้ไขไม่ครบถ้วน (id)", 400, "VALIDATION_ERROR");
     }
 
     const dataSource = await initDatabase();
@@ -104,15 +105,45 @@ export async function PUT(req: NextRequest) {
       throw new AppError("ไม่พบไอเทมที่ต้องการแก้ไข", 404, "NOT_FOUND");
     }
 
-    const category = await catRepo.findOneBy({ id: categoryId });
-    if (!category) {
-      throw new AppError("ไม่พบหมวดหมู่ที่เลือกในระบบ", 400, "VALIDATION_ERROR");
+    if (name && categoryId) {
+      const category = await catRepo.findOneBy({ id: categoryId });
+      if (!category) {
+        throw new AppError("ไม่พบหมวดหมู่ที่เลือกในระบบ", 400, "VALIDATION_ERROR");
+      }
+      item.name = name.trim();
+      item.category = category;
+      item.image_url = formatImageUrl(image_url);
     }
 
-    item.name = name.trim();
-    item.category = category;
-    item.image_url = formatImageUrl(image_url);
+    if (is_use !== undefined) {
+      item.is_use = !!is_use;
+    }
     
+    const updatedItem = await itemRepo.save(item);
+    return NextResponse.json(updatedItem);
+  } catch (error: any) {
+    return handleApiError(error);
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  try {
+    await verifyAuth(req);
+
+    const { id, is_use } = await req.json();
+    if (!id || is_use === undefined) {
+      throw new AppError("กรุณาระบุ id และสถานะ is_use", 400, "VALIDATION_ERROR");
+    }
+
+    const dataSource = await initDatabase();
+    const itemRepo = dataSource.getRepository(Item);
+
+    const item = await itemRepo.findOneBy({ id });
+    if (!item) {
+      throw new AppError("ไม่พบไอเทมที่ต้องการแก้ไข", 404, "NOT_FOUND");
+    }
+
+    item.is_use = !!is_use;
     const updatedItem = await itemRepo.save(item);
     return NextResponse.json(updatedItem);
   } catch (error: any) {

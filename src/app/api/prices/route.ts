@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
   try {
     await verifyAuth(req);
 
-    const { itemId, lowPrice, highPrice, avgPrice, source, note, recordedAt, unitQuantity, isBulk, showUnitPrice } = await req.json();
+    const { itemId, lowPrice, highPrice, avgPrice, source, note, recordedAt, unitQuantity, lowQuantity, highQuantity, isBulk, showUnitPrice } = await req.json();
 
     if (!itemId || lowPrice === undefined || highPrice === undefined || avgPrice === undefined || !source) {
       throw new AppError("ข้อมูลสำหรับบันทึกราคาไม่ครบถ้วน", 400, "VALIDATION_ERROR");
@@ -74,9 +74,18 @@ export async function POST(req: NextRequest) {
     const high = Number(highPrice);
     const avg = Number(avgPrice);
 
-    // Business Logic Validation
+    // Business Logic Validation for Prices
     if (low > avg || avg > high) {
       throw new AppError("ราคาผิดพลาดตามกฎธุรกิจ: ราคาต่ำสุด (Low) <= ราคากลาง (Avg) <= ราคาสูงสุด (High)", 400, "VALIDATION_ERROR");
+    }
+
+    const unitQty = unitQuantity !== undefined ? Math.max(1, Number(unitQuantity)) : 1;
+    const lowQty = lowQuantity !== undefined && lowQuantity !== null && lowQuantity !== "" ? Math.max(1, Number(lowQuantity)) : unitQty;
+    const highQty = highQuantity !== undefined && highQuantity !== null && highQuantity !== "" ? Math.max(1, Number(highQuantity)) : unitQty;
+
+    // Business Logic Validation for Quantities (when bulk)
+    if (isBulk && (lowQty > unitQty || unitQty > highQty)) {
+      throw new AppError("จำนวนชิ้นผิดพลาดตามกฎธุรกิจ: จำนวนต่ำสุด <= จำนวนเฉลี่ย <= จำนวนสูงสุด", 400, "VALIDATION_ERROR");
     }
 
     const dataSource = await initDatabase();
@@ -96,7 +105,9 @@ export async function POST(req: NextRequest) {
       source: source.trim(),
       note: note?.trim() || "",
       recordedAt: recordedAt ? new Date(recordedAt) : new Date(),
-      unitQuantity: unitQuantity !== undefined ? Math.max(1, Number(unitQuantity)) : 1,
+      unitQuantity: unitQty,
+      lowQuantity: lowQty,
+      highQuantity: highQty,
       isBulk: !!isBulk,
       showUnitPrice: showUnitPrice === undefined ? true : !!showUnitPrice,
     });
@@ -112,7 +123,7 @@ export async function PUT(req: NextRequest) {
   try {
     await verifyAuth(req);
 
-    const { id, itemId, lowPrice, highPrice, avgPrice, source, note, recordedAt, unitQuantity, isBulk, showUnitPrice } = await req.json();
+    const { id, itemId, lowPrice, highPrice, avgPrice, source, note, recordedAt, unitQuantity, lowQuantity, highQuantity, isBulk, showUnitPrice } = await req.json();
 
     if (!id || !itemId || lowPrice === undefined || highPrice === undefined || avgPrice === undefined || !source) {
       throw new AppError("ข้อมูลสำหรับแก้ไขไม่ครบถ้วน", 400, "VALIDATION_ERROR");
@@ -122,9 +133,18 @@ export async function PUT(req: NextRequest) {
     const high = Number(highPrice);
     const avg = Number(avgPrice);
 
-    // Business Logic Validation
+    // Business Logic Validation for Prices
     if (low > avg || avg > high) {
       throw new AppError("ราคาผิดพลาดตามกฎธุรกิจ: ราคาต่ำสุด (Low) <= ราคากลาง (Avg) <= ราคาสูงสุด (High)", 400, "VALIDATION_ERROR");
+    }
+
+    const unitQty = unitQuantity !== undefined ? Math.max(1, Number(unitQuantity)) : 1;
+    const lowQty = lowQuantity !== undefined && lowQuantity !== null && lowQuantity !== "" ? Math.max(1, Number(lowQuantity)) : unitQty;
+    const highQty = highQuantity !== undefined && highQuantity !== null && highQuantity !== "" ? Math.max(1, Number(highQuantity)) : unitQty;
+
+    // Business Logic Validation for Quantities (when bulk)
+    if (isBulk && (lowQty > unitQty || unitQty > highQty)) {
+      throw new AppError("จำนวนชิ้นผิดพลาดตามกฎธุรกิจ: จำนวนต่ำสุด <= จำนวนเฉลี่ย <= จำนวนสูงสุด", 400, "VALIDATION_ERROR");
     }
 
     const dataSource = await initDatabase();
@@ -148,7 +168,9 @@ export async function PUT(req: NextRequest) {
     priceRecord.source = source.trim();
     priceRecord.note = note?.trim() || "";
     priceRecord.recordedAt = recordedAt ? new Date(recordedAt) : new Date();
-    priceRecord.unitQuantity = unitQuantity !== undefined ? Math.max(1, Number(unitQuantity)) : 1;
+    priceRecord.unitQuantity = unitQty;
+    priceRecord.lowQuantity = lowQty;
+    priceRecord.highQuantity = highQty;
     priceRecord.isBulk = !!isBulk;
     priceRecord.showUnitPrice = showUnitPrice === undefined ? true : !!showUnitPrice;
 

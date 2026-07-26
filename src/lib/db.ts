@@ -39,25 +39,26 @@ declare global {
 }
 
 export async function initDatabase() {
-  if (globalThis.dbDataSource) {
-    // Next.js dev server executes each API route in an isolated sandbox,
-    // which results in separate constructor references for Category, Item, etc.
-    // Instead of re-initializing the DataSource pool (which causes connection leaks/drops),
-    // we use our getRepository string-fallback patch above to support cross-sandbox queries.
-    const hasHmrReload = false;
+  if (globalThis.dbDataSource && globalThis.dbDataSource.isInitialized) {
+    // Check if cached TypeORM metadata is missing newly added entity fields (like is_use)
+    let needsReinit = false;
+    try {
+      const itemMetadata = globalThis.dbDataSource.getMetadata("Item");
+      if (!itemMetadata.findColumnWithPropertyName("is_use")) {
+        needsReinit = true;
+      }
+    } catch {
+      needsReinit = true;
+    }
 
-    if (hasHmrReload) {
-      console.log("🔄 Next.js HMR detected new entity definitions. Re-initializing TypeORM DataSource...");
+    if (needsReinit) {
+      console.log("🔄 Next.js HMR detected new entity definitions (is_use). Re-initializing TypeORM DataSource...");
       const oldDataSource = globalThis.dbDataSource;
       globalThis.dbDataSource = undefined;
       globalThis.dbInitPromise = undefined;
 
       if (oldDataSource.isInitialized) {
-        // Delay connection pool destruction by 10 seconds to let in-flight queries complete safely
-        setTimeout(() => {
-          console.log("🧹 Gracefully closing old HMR-replaced database connection pool...");
-          oldDataSource.destroy().catch(() => { });
-        }, 10000);
+        oldDataSource.destroy().catch(() => { });
       }
     }
   }
@@ -99,6 +100,16 @@ export async function initDatabase() {
       globalThis.dbInitPromise = globalThis.dbDataSource.initialize()
         .then(async (dataSourceInstance) => {
           console.log("🔌 Connection established successfully!");
+
+          // Auto-migrate: Ensure is_use column exists in Postgres database items table
+          try {
+            await dataSourceInstance.query(`
+              ALTER TABLE items ADD COLUMN IF NOT EXISTS is_use BOOLEAN DEFAULT TRUE;
+              UPDATE items SET is_use = TRUE WHERE is_use IS NULL;
+            `);
+          } catch (mErr) {
+            console.warn("Notice during is_use column migration:", mErr);
+          }
 
           // Seed units first if empty
           const unitRepo = dataSourceInstance.getRepository(Unit);
@@ -225,9 +236,9 @@ export async function initDatabase() {
 
             if (medkit) {
               defaultPrices.push(
-                { item: medkit, lowPrice: 80, highPrice: 120, avgPrice: 100, source: "FB ซื้อขาย", note: "ขายปลีก 1 ชิ้นปกติ", unitQuantity: 1, isBulk: false, recordedAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000) },
-                { item: medkit, lowPrice: 4000, highPrice: 5000, avgPrice: 4500, source: "Discord คลังกลาง", note: "ยกล็อต 50 ชิ้นสุดคุ้ม (ตกชิ้นละ 90 GC)", unitQuantity: 50, isBulk: true, recordedAt: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000) },
-                { item: medkit, lowPrice: 7500, highPrice: 8500, avgPrice: 8000, source: "กลุ่มทางการ", note: "ขายส่ง 100 ชิ้นประหยัดมาก (ตกชิ้นละ 80 GC)", unitQuantity: 100, isBulk: true, recordedAt: now },
+                { item: medkit, lowPrice: 80, highPrice: 120, avgPrice: 100, source: "FB ซื้อขาย", note: "ขายปลีก 1 ชิ้นปกติ", unitQuantity: 1, lowQuantity: 1, highQuantity: 1, isBulk: false, recordedAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000) },
+                { item: medkit, lowPrice: 4000, highPrice: 5000, avgPrice: 4500, source: "Discord คลังกลาง", note: "ยกล็อต 45-55 ชิ้นสุดคุ้ม (ตกชิ้นละ 90 GC)", unitQuantity: 50, lowQuantity: 45, highQuantity: 55, isBulk: true, recordedAt: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000) },
+                { item: medkit, lowPrice: 7500, highPrice: 8500, avgPrice: 8000, source: "กลุ่มทางการ", note: "ขายส่ง 100 ชิ้นประหยัดมาก (ตกชิ้นละ 80 GC)", unitQuantity: 100, lowQuantity: 100, highQuantity: 100, isBulk: true, recordedAt: now },
               );
             }
 

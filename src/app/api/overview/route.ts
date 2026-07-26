@@ -42,7 +42,8 @@ export async function GET(req: NextRequest) {
 
     // Build filter
     const where: any = {
-      id: In(activeItemIds)
+      id: In(activeItemIds),
+      is_use: true,
     };
     if (search) {
       where.name = ILike(`%${search}%`);
@@ -163,6 +164,8 @@ export async function GET(req: NextRequest) {
         // Wholesale/Bulk attributes
         isBulk: latest ? latest.isBulk : false,
         unitQuantity: latest ? latest.unitQuantity : 1,
+        lowQuantity: latest ? (latest.lowQuantity ?? latest.unitQuantity) : 1,
+        highQuantity: latest ? (latest.highQuantity ?? latest.unitQuantity) : 1,
         showUnitPrice: latest ? (latest.showUnitPrice !== false) : true,
         
         // Total Prices (lump sum)
@@ -172,8 +175,8 @@ export async function GET(req: NextRequest) {
 
         // Unit Price (calculated)
         avgPrice: latestUnitAvg,
-        lowPrice: latest ? (latest.lowPrice / (latest.unitQuantity || 1)) : 0,
-        highPrice: latest ? (latest.highPrice / (latest.unitQuantity || 1)) : 0,
+        lowPrice: latest ? (latest.lowPrice / (latest.highQuantity || latest.unitQuantity || 1)) : 0,
+        highPrice: latest ? (latest.highPrice / (latest.lowQuantity || latest.unitQuantity || 1)) : 0,
 
         note: latest ? latest.note : "",
         trend,

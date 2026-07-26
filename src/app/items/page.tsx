@@ -47,6 +47,7 @@ export default function ItemsPage() {
     setCategory,
     createItem,
     updateItem,
+    toggleIsUseItem,
     deleteItem
   } = useItems();
 
@@ -82,6 +83,7 @@ export default function ItemsPage() {
   const [formName, setFormName] = useState("");
   const [formCategoryId, setFormCategoryId] = useState("");
   const [formImageUrl, setFormImageUrl] = useState("");
+  const [formIsUse, setFormIsUse] = useState(true);
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -89,12 +91,29 @@ export default function ItemsPage() {
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
+  // Quick toggle is_use state handler
+  const handleToggleIsUse = async (item: Item, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const nextState = !(item.is_use !== false);
+    try {
+      await toggleIsUseItem(item.id, nextState);
+      if (nextState) {
+        toast.success(`เปิดการแสดงผลไอเทม "${item.name}" บนหน้าหลักเรียบร้อย`);
+      } else {
+        toast.info(`ปิดการแสดงผลไอเทม "${item.name}" บนหน้าหลักเรียบร้อย`);
+      }
+    } catch (err: any) {
+      toast.error(err.message || "เกิดข้อผิดพลาดในการเปลี่ยนสถานะการแสดงผล");
+    }
+  };
+
   // Open modal for Create
   const handleOpenAdd = () => {
     setEditingItem(null);
     setFormName("");
     setFormCategoryId(categoriesList[0]?.id || "");
     setFormImageUrl("");
+    setFormIsUse(true);
     setFormError(null);
     setModalOpen(true);
   };
@@ -105,6 +124,7 @@ export default function ItemsPage() {
     setFormName(item.name);
     setFormCategoryId(item.category?.id || "");
     setFormImageUrl(item.image_url);
+    setFormIsUse(item.is_use !== false);
     setFormError(null);
     setModalOpen(true);
   };
@@ -132,6 +152,7 @@ export default function ItemsPage() {
           name: formName.trim(),
           categoryId: formCategoryId,
           image_url: formatImageUrl(formImageUrl.trim()),
+          is_use: formIsUse,
         });
         toast.success("บันทึกการแก้ไขไอเทมสำเร็จ!");
       } else {
@@ -140,6 +161,7 @@ export default function ItemsPage() {
           name: formName.trim(),
           categoryId: formCategoryId,
           image_url: formatImageUrl(formImageUrl.trim()),
+          is_use: formIsUse,
         });
         toast.success("เพิ่มไอเทมใหม่เรียบร้อยแล้ว!");
       }
@@ -271,7 +293,8 @@ export default function ItemsPage() {
           {items.map((item, idx) => (
             <div
               key={item.id}
-              className="group relative bg-gradient-to-b from-neutral-900 to-neutral-950/90 border border-zinc-800/80 rounded-lg overflow-hidden shadow-lg hover:border-game-red hover:shadow-[0_0_15px_rgba(198,40,40,0.15)] transition-all duration-300 flex flex-col justify-between"
+              className={`group relative bg-gradient-to-b from-neutral-900 to-neutral-950/90 border rounded-lg overflow-hidden shadow-lg hover:border-game-red hover:shadow-[0_0_15px_rgba(198,40,40,0.15)] transition-all duration-300 flex flex-col justify-between ${item.is_use === false ? "border-amber-950/60 opacity-80" : "border-zinc-800/80"
+                }`}
             >
               {/* Item Image Slot */}
               <div className="relative aspect-video w-full bg-black/80 flex items-center justify-center overflow-hidden border-b border-zinc-900">
@@ -281,6 +304,7 @@ export default function ItemsPage() {
                     alt={item.name}
                     fill
                     unoptimized
+                    referrerPolicy="no-referrer"
                     sizes="(max-width: 768px) 100vw, 256px"
                     className="object-contain p-1 group-hover:scale-110 transition-transform duration-300"
                   />
@@ -300,10 +324,28 @@ export default function ItemsPage() {
               {/* Item Card Body */}
               <div className="p-4 flex-1 flex flex-col justify-between gap-3 text-left">
                 <div>
-                  <h4 className="font-gaming font-bold text-sm text-zinc-100 tracking-wide line-clamp-1">{item.name}</h4>
-                  <div className="flex items-center gap-1.5 text-[10px] text-zinc-500 mt-1.5">
-                    <Calendar className="w-3 h-3 text-zinc-600" />
-                    <span>ลงทะเบียน: {new Date(item.created_at).toLocaleDateString("th-TH")}</span>
+                  <div className="flex items-center justify-between gap-2">
+                    <h4 className="font-gaming font-bold text-sm text-zinc-100 tracking-wide line-clamp-1">{item.name}</h4>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-2 mt-2">
+                    <div className="flex items-center gap-1.5 text-[10px] text-zinc-500">
+                      <Calendar className="w-3 h-3 text-zinc-600" />
+                      <span>{new Date(item.created_at).toLocaleDateString("th-TH")}</span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={(e) => handleToggleIsUse(item, e)}
+                      className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold flex items-center gap-1.5 border transition-all cursor-pointer ${item.is_use !== false
+                          ? "bg-emerald-950/40 border-emerald-900/60 text-emerald-400 hover:bg-emerald-900/60"
+                          : "bg-amber-950/40 border-amber-900/60 text-amber-400 hover:bg-amber-900/60"
+                        }`}
+                      title={item.is_use !== false ? "คลิกเพื่อปิดการแสดงผลในหน้าหลัก" : "คลิกเพื่อเปิดการแสดงผลในหน้าหลัก"}
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full ${item.is_use !== false ? "bg-emerald-400 animate-pulse" : "bg-amber-400"}`} />
+                      <span>{item.is_use !== false ? "เปิดใช้งาน" : "ซ่อนในหน้าแรก"}</span>
+                    </button>
                   </div>
                 </div>
 
@@ -339,6 +381,7 @@ export default function ItemsPage() {
                   <th className="px-6 py-4">รูป</th>
                   <th className="px-6 py-4">ชื่อไอเทม</th>
                   <th className="px-6 py-4">หมวดหมู่</th>
+                  <th className="px-6 py-4 text-center">สถานะหน้าหลัก (is_use)</th>
                   <th className="px-6 py-4">เวลาที่สร้าง</th>
                   <th className="px-6 py-4 text-center">จัดการ</th>
                 </tr>
@@ -350,7 +393,7 @@ export default function ItemsPage() {
                     <td className="px-6 py-2">
                       <div className="w-16 h-12 rounded bg-black/60 border border-zinc-800 flex items-center justify-center overflow-hidden p-1 relative">
                         {isValidImageUrl(item.image_url) ? (
-                          <Image src={formatImageUrl(item.image_url)} alt={item.name} fill unoptimized sizes="64px" className="object-contain p-1" />
+                          <Image src={formatImageUrl(item.image_url)} alt={item.name} fill unoptimized sizes="64px" className="object-contain p-1" referrerPolicy="no-referrer" />
                         ) : (
                           <ImageIcon className="w-4 h-4 text-zinc-700" />
                         )}
@@ -361,6 +404,20 @@ export default function ItemsPage() {
                       <span className="px-2 py-1 text-[10px] uppercase font-bold rounded bg-zinc-900 border border-zinc-800 text-zinc-400">
                         {item.category?.name || "ไม่ระบุหมวดหมู่"}
                       </span>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <button
+                        type="button"
+                        onClick={(e) => handleToggleIsUse(item, e)}
+                        className={`px-2.5 py-1 rounded text-[11px] font-mono font-semibold inline-flex items-center gap-1.5 border transition-all cursor-pointer ${item.is_use !== false
+                            ? "bg-emerald-950/40 border-emerald-800/60 text-emerald-400 hover:bg-emerald-900/60"
+                            : "bg-amber-950/40 border-amber-900/60 text-amber-400 hover:bg-amber-900/60"
+                          }`}
+                        title={item.is_use !== false ? "คลิกเพื่อปิดการแสดงผลในหน้าหลัก" : "คลิกเพื่อเปิดการแสดงผลในหน้าหลัก"}
+                      >
+                        <span className={`w-2 h-2 rounded-full ${item.is_use !== false ? "bg-emerald-400 animate-pulse" : "bg-amber-400"}`} />
+                        <span>{item.is_use !== false ? "เปิดใช้งาน" : "ซ่อนในหน้าแรก"}</span>
+                      </button>
                     </td>
                     <td className="px-6 py-4 text-xs text-zinc-400">
                       {new Date(item.created_at).toLocaleString("th-TH")}
@@ -481,12 +538,29 @@ export default function ItemsPage() {
                       alt="Preview"
                       fill
                       unoptimized
+                      referrerPolicy="no-referrer"
                       sizes="112px"
                       className="object-contain p-2"
                     />
                   </div>
                 </div>
               )}
+
+              {/* Status is_use toggle switch */}
+              <div className="flex items-center justify-between p-3 bg-black/40 border border-zinc-850 rounded-lg">
+                <div className="flex flex-col gap-0.5">
+                  <label htmlFor="formIsUse" className="font-gaming text-xs font-bold text-zinc-200 cursor-pointer select-none">
+                    เปิดการแสดงผล
+                  </label>
+                </div>
+                <input
+                  type="checkbox"
+                  id="formIsUse"
+                  checked={formIsUse}
+                  onChange={(e) => setFormIsUse(e.target.checked)}
+                  className="accent-game-red w-5 h-5 cursor-pointer"
+                />
+              </div>
 
               {/* Buttons */}
               <div className="flex gap-3 justify-end mt-2">

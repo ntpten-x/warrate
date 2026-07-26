@@ -34,6 +34,12 @@ export class Price {
   @Column({ type: "integer", name: "unit_quantity", default: 1 })
   unitQuantity!: number;
 
+  @Column({ type: "integer", name: "low_quantity", nullable: true })
+  lowQuantity?: number;
+
+  @Column({ type: "integer", name: "high_quantity", nullable: true })
+  highQuantity?: number;
+
   @Column({ type: "boolean", name: "is_bulk", default: false })
   isBulk!: boolean;
 

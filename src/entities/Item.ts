@@ -18,6 +18,9 @@ export class Item {
   @Column({ type: "text", nullable: true })
   image_url!: string;
 
+  @Column({ type: "boolean", name: "is_use", default: true })
+  is_use!: boolean;
+
   @CreateDateColumn({ type: "timestamp with time zone" })
   created_at!: Date;
 }

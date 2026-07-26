@@ -11,7 +11,7 @@ export default function NotFound() {
   };
 
   return (
-    <div 
+    <div
       className="relative min-h-[calc(100vh-8rem)] w-full flex flex-col items-center justify-center text-white p-6 font-sans select-none rounded-lg overflow-hidden border border-zinc-900/60 bg-neutral-950/40 backdrop-blur-sm"
       style={{
         backgroundImage: "radial-gradient(circle, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.99) 100%), url('/zombie-bg.png')",
@@ -35,9 +35,6 @@ export default function NotFound() {
         <div className="flex flex-col gap-2">
           <h1 className="font-gaming font-extrabold text-4xl tracking-widest text-red-600">404 ERROR</h1>
           <h3 className="font-gaming font-bold text-sm text-zinc-200 tracking-wider uppercase mt-1">OUT OF SECTOR BOUNDS</h3>
-          <p className="text-xs text-zinc-400 leading-relaxed font-sans max-w-sm mt-2">
-            คุณได้พยายามเชื่อมต่อไปยังพิกัดนอกขอบเขตความปลอดภัยของเซิร์ฟเวอร์ พื้นที่นี้มีค่ากัมมันตภาพรังสีสูง หรืออาจจะยังไม่พร้อมเปิดให้บริการในขณะนี้
-          </p>
         </div>
 
         <div className="w-full h-[1px] bg-zinc-900/60" />
@@ -51,14 +48,14 @@ export default function NotFound() {
 
         {/* Recover Controls */}
         <div className="w-full flex flex-col sm:flex-row gap-3 justify-center mt-2">
-          <Link 
+          <Link
             href="/"
             className="w-full sm:w-auto bg-game-red hover:bg-game-red-hover text-white border border-red-600 font-gaming text-xs font-bold px-5 h-9 flex items-center justify-center gap-1.5 transition-all rounded-md"
           >
             <Home className="w-3.5 h-3.5" />
             กลับโซนปลอดภัย
           </Link>
-          <Button 
+          <Button
             onClick={handleReload}
             className="w-full sm:w-auto bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-zinc-800 text-xs px-5 h-9 flex items-center justify-center gap-1.5 transition-all"
           >

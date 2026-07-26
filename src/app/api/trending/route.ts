@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
       const matchedIds = itemIds.filter(id => activeItemIds.includes(id));
       if (matchedIds.length > 0) {
         dbItems = await itemRepo.find({
-          where: { id: In(matchedIds) },
+          where: { id: In(matchedIds), is_use: true },
         });
       }
     }
@@ -60,7 +60,7 @@ export async function GET(req: NextRequest) {
     // If no trending items could be fetched, or none of them have prices, fall back to newest active items
     if (dbItems.length === 0) {
       dbItems = await itemRepo.find({
-        where: { id: In(activeItemIds) },
+        where: { id: In(activeItemIds), is_use: true },
         order: { created_at: "DESC" },
         take: 3,
       });
@@ -108,6 +108,8 @@ export async function GET(req: NextRequest) {
         // Wholesale/Bulk attributes
         isBulk: latest ? latest.isBulk : false,
         unitQuantity: latest ? latest.unitQuantity : 1,
+        lowQuantity: latest ? (latest.lowQuantity ?? latest.unitQuantity) : 1,
+        highQuantity: latest ? (latest.highQuantity ?? latest.unitQuantity) : 1,
         showUnitPrice: latest ? (latest.showUnitPrice !== false) : true,
         
         // Total Prices (lump sum)
@@ -117,8 +119,8 @@ export async function GET(req: NextRequest) {
 
         // Unit Price (calculated)
         avgPrice: latestUnitAvg,
-        lowPrice: latest ? (latest.lowPrice / (latest.unitQuantity || 1)) : 0,
-        highPrice: latest ? (latest.highPrice / (latest.unitQuantity || 1)) : 0,
+        lowPrice: latest ? (latest.lowPrice / (latest.highQuantity || latest.unitQuantity || 1)) : 0,
+        highPrice: latest ? (latest.highPrice / (latest.lowQuantity || latest.unitQuantity || 1)) : 0,
 
         note: latest ? latest.note : "",
         trend,

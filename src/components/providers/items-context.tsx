@@ -16,6 +16,7 @@ export interface Item {
     icon_name?: string;
   };
   image_url: string;
+  is_use?: boolean;
   created_at: string;
 }
 
@@ -45,8 +46,9 @@ interface ItemsContextType {
   setSearch: (search: string) => void;
   setCategory: (category: string) => void;
   
-  createItem: (item: { name: string; categoryId: string; image_url: string }) => Promise<any>;
-  updateItem: (item: { id: string; name: string; categoryId: string; image_url: string }) => Promise<any>;
+  createItem: (item: { name: string; categoryId: string; image_url: string; is_use?: boolean }) => Promise<any>;
+  updateItem: (item: { id: string; name?: string; categoryId?: string; image_url?: string; is_use?: boolean }) => Promise<any>;
+  toggleIsUseItem: (id: string, is_use: boolean) => Promise<any>;
   deleteItem: (id: string) => Promise<any>;
 }
 
@@ -102,7 +104,7 @@ export function ItemsProvider({ children }: { children: ReactNode }) {
 
   // useMutation to create item
   const createMutation = useMutation({
-    mutationFn: async (newItem: { name: string; categoryId: string; image_url: string }) => {
+    mutationFn: async (newItem: { name: string; categoryId: string; image_url: string; is_use?: boolean }) => {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token || "";
 
@@ -126,7 +128,7 @@ export function ItemsProvider({ children }: { children: ReactNode }) {
 
   // useMutation to update item
   const updateMutation = useMutation({
-    mutationFn: async (updatedItem: { id: string; name: string; categoryId: string; image_url: string }) => {
+    mutationFn: async (updatedItem: { id: string; name?: string; categoryId?: string; image_url?: string; is_use?: boolean }) => {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token || "";
 
@@ -137,6 +139,30 @@ export function ItemsProvider({ children }: { children: ReactNode }) {
           "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify(updatedItem),
+      });
+      if (!res.ok) {
+        throw res;
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["items"] });
+    },
+  });
+
+  // useMutation to toggle is_use item status
+  const toggleIsUseMutation = useMutation({
+    mutationFn: async ({ id, is_use }: { id: string; is_use: boolean }) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token || "";
+
+      const res = await fetch("/api/manage-items", {
+        method: "PATCH",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ id, is_use }),
       });
       if (!res.ok) {
         throw res;
@@ -170,7 +196,7 @@ export function ItemsProvider({ children }: { children: ReactNode }) {
     },
   });
 
-  const createItem = async (item: { name: string; categoryId: string; image_url: string }) => {
+  const createItem = async (item: { name: string; categoryId: string; image_url: string; is_use?: boolean }) => {
     try {
       return await createMutation.mutateAsync(item);
     } catch (err) {
@@ -179,9 +205,18 @@ export function ItemsProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const updateItem = async (item: { id: string; name: string; categoryId: string; image_url: string }) => {
+  const updateItem = async (item: { id: string; name?: string; categoryId?: string; image_url?: string; is_use?: boolean }) => {
     try {
       return await updateMutation.mutateAsync(item);
+    } catch (err) {
+      const msg = await parseClientError(err);
+      throw new Error(msg);
+    }
+  };
+
+  const toggleIsUseItem = async (id: string, is_use: boolean) => {
+    try {
+      return await toggleIsUseMutation.mutateAsync({ id, is_use });
     } catch (err) {
       const msg = await parseClientError(err);
       throw new Error(msg);
@@ -215,6 +250,7 @@ export function ItemsProvider({ children }: { children: ReactNode }) {
         setCategory,
         createItem, 
         updateItem, 
+        toggleIsUseItem,
         deleteItem 
       }}
     >

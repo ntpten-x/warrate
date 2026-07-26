@@ -50,6 +50,8 @@ interface PriceRecord {
   recordedAt: string;
   createdAt: string;
   unitQuantity?: number;
+  lowQuantity?: number;
+  highQuantity?: number;
   isBulk?: boolean;
   showUnitPrice?: boolean;
 }
@@ -97,6 +99,8 @@ function PricesContent() {
   const [recentPricesCache, setRecentPricesCache] = useState<PriceRecord[]>([]);
 
   const [formUnitQuantity, setFormUnitQuantity] = useState("1");
+  const [formLowQuantity, setFormLowQuantity] = useState("1");
+  const [formHighQuantity, setFormHighQuantity] = useState("1");
   const [formIsBulk, setFormIsBulk] = useState(false);
   const [formShowUnitPrice, setFormShowUnitPrice] = useState(false);
 
@@ -241,7 +245,10 @@ function PricesContent() {
     setFormAvgPrice(String(latestCachedPrice.avgPrice));
     setFormSource(latestCachedPrice.source);
     setFormNote(latestCachedPrice.note || "");
-    setFormUnitQuantity(String(latestCachedPrice.unitQuantity || 1));
+    const uQty = latestCachedPrice.unitQuantity || 1;
+    setFormUnitQuantity(String(uQty));
+    setFormLowQuantity(String(latestCachedPrice.lowQuantity ?? uQty));
+    setFormHighQuantity(String(latestCachedPrice.highQuantity ?? uQty));
     setFormIsBulk(!!latestCachedPrice.isBulk);
     setFormShowUnitPrice(latestCachedPrice.showUnitPrice !== false);
     toast.success("คัดลอกราคาและแหล่งอ้างอิงล่าสุดเรียบร้อย!");
@@ -257,6 +264,8 @@ function PricesContent() {
     setFormSource("กลุ่ม Facebook Community WarzTH");
     setFormNote("อ้างอิงจาก กลุ่ม Facebook Community WarzTH");
     setFormUnitQuantity("1");
+    setFormLowQuantity("1");
+    setFormHighQuantity("1");
     setFormIsBulk(false);
     setFormShowUnitPrice(false);
     // Set default recorded datetime to local timezone string format
@@ -279,7 +288,10 @@ function PricesContent() {
     setFormAvgPrice(String(record.avgPrice));
     setFormSource(record.source);
     setFormNote(record.note || "");
-    setFormUnitQuantity(String(record.unitQuantity || 1));
+    const uQty = record.unitQuantity || 1;
+    setFormUnitQuantity(String(uQty));
+    setFormLowQuantity(String(record.lowQuantity ?? uQty));
+    setFormHighQuantity(String(record.highQuantity ?? uQty));
     setFormIsBulk(!!record.isBulk);
     setFormShowUnitPrice(record.showUnitPrice !== false);
 
@@ -327,7 +339,16 @@ function PricesContent() {
     const avg = Number(formAvgPrice);
 
     if (low > avg || avg > high) {
-      setFormError("กฎธุรกิจ: ราคาต่ำสุด (Low) <= ราคากลาง (Avg) <= ราคาสูงสุด (High)");
+      setFormError("กฎธุรกิจราคา: ราคาต่ำสุด (Low) <= ราคากลาง (Avg) <= ราคาสูงสุด (High)");
+      return;
+    }
+
+    const avgQty = Number(formUnitQuantity || 1);
+    const lowQty = Number(formLowQuantity || formUnitQuantity || 1);
+    const highQty = Number(formHighQuantity || formUnitQuantity || 1);
+
+    if (formIsBulk && (lowQty > avgQty || avgQty > highQty)) {
+      setFormError("กฎธุรกิจจำนวนชิ้น: จำนวนต่ำสุด <= จำนวนเฉลี่ย <= จำนวนสูงสุด");
       return;
     }
 
@@ -361,7 +382,9 @@ function PricesContent() {
             source: formSource.trim(),
             note: formNote.trim(),
             recordedAt: formRecordedAt ? new Date(formRecordedAt).toISOString() : new Date().toISOString(),
-            unitQuantity: Number(formUnitQuantity || 1),
+            unitQuantity: avgQty,
+            lowQuantity: lowQty,
+            highQuantity: highQty,
             isBulk: formIsBulk,
             showUnitPrice: formShowUnitPrice,
           })
@@ -385,7 +408,9 @@ function PricesContent() {
             source: formSource.trim(),
             note: formNote.trim(),
             recordedAt: formRecordedAt ? new Date(formRecordedAt).toISOString() : new Date().toISOString(),
-            unitQuantity: Number(formUnitQuantity || 1),
+            unitQuantity: avgQty,
+            lowQuantity: lowQty,
+            highQuantity: highQty,
             isBulk: formIsBulk,
             showUnitPrice: formShowUnitPrice,
           })
@@ -718,11 +743,24 @@ function PricesContent() {
                         <div className="flex flex-col gap-0.5">
                           <span className="font-gaming text-zinc-100 font-bold tracking-wide">{record.item?.name}</span>
                           {record.isBulk ? (
-                            <span className="text-[10px] text-amber-400 font-mono font-semibold">
-                              📦 เรทการซื้อขาย {record.unitQuantity} {record.item?.category?.unit?.name || "ชิ้น"}{record.showUnitPrice !== false && ` | ${record.item?.category?.unit?.name || "ชิ้น"}ละ ${(record.avgPrice / (record.unitQuantity || 1)).toLocaleString(undefined, { maximumFractionDigits: 2 })} บาท`}
-                            </span>
+                            <div className="flex flex-col text-[10px] font-mono">
+                              <span className="text-amber-400 font-semibold">
+                                📦 เรทเหมา{" "}
+                                {record.lowQuantity && record.highQuantity && record.lowQuantity !== record.highQuantity
+                                  ? `${record.lowQuantity.toLocaleString()} ~ ${record.highQuantity.toLocaleString()} ${record.item?.category?.unit?.name || "ชิ้น"} (เฉลี่ย ${record.unitQuantity?.toLocaleString()} ${record.item?.category?.unit?.name || "ชิ้น"})`
+                                  : `${record.unitQuantity?.toLocaleString()} ${record.item?.category?.unit?.name || "ชิ้น"}`}
+                              </span>
+                              {record.showUnitPrice !== false && (
+                                <span className="text-emerald-400 font-medium">
+                                  💡 {record.item?.category?.unit?.name || "ชิ้น"}ละ{" "}
+                                  {record.lowQuantity && record.highQuantity && (record.lowQuantity !== record.highQuantity || record.lowPrice !== record.highPrice)
+                                    ? `${(record.lowPrice / (record.highQuantity || record.unitQuantity || 1)).toLocaleString(undefined, { maximumFractionDigits: 2 })} - ${(record.highPrice / (record.lowQuantity || record.unitQuantity || 1)).toLocaleString(undefined, { maximumFractionDigits: 2 })} บาท (เฉลี่ย ${(record.avgPrice / (record.unitQuantity || 1)).toLocaleString(undefined, { maximumFractionDigits: 2 })} บาท)`
+                                    : `${(record.avgPrice / (record.unitQuantity || 1)).toLocaleString(undefined, { maximumFractionDigits: 2 })} บาท`}
+                                </span>
+                              )}
+                            </div>
                           ) : (
-                            <span className="text-[10px] text-zinc-505 font-mono">
+                            <span className="text-[10px] text-zinc-500 font-mono">
                               👤 เรท 1 : 1
                             </span>
                           )}
@@ -781,7 +819,10 @@ function PricesContent() {
                     </span>
                     {record.isBulk ? (
                       <span className="text-[10px] text-amber-400 font-mono font-semibold block truncate">
-                        📦 เรท {record.unitQuantity} {record.item?.category?.unit?.name || "ชิ้น"}
+                        📦 เรท{" "}
+                        {record.lowQuantity && record.highQuantity && record.lowQuantity !== record.highQuantity
+                          ? `${record.lowQuantity.toLocaleString()} ~ ${record.highQuantity.toLocaleString()} ${record.item?.category?.unit?.name || "ชิ้น"} (เฉลี่ย ${record.unitQuantity?.toLocaleString()})`
+                          : `${record.unitQuantity?.toLocaleString()} ${record.item?.category?.unit?.name || "ชิ้น"}`}
                       </span>
                     ) : (
                       <span className="text-[10px] text-zinc-500 font-mono block">
@@ -974,21 +1015,127 @@ function PricesContent() {
                 </div>
 
                 {formIsBulk && (
-                  <div className="flex flex-col gap-1.5 border-t border-zinc-900/60 pt-2.5">
-                    <label className="font-gaming text-[10px] text-zinc-400 uppercase font-semibold">จำนวนไอเทม</label>
-                    <Input
-                      type="number"
-                      value={formUnitQuantity}
-                      onChange={(e) => setFormUnitQuantity(e.target.value)}
-                      placeholder="เช่น 50, 100, 500"
-                      required
-                      min="1"
-                      className="bg-black/50 border-zinc-800 text-xs focus:border-game-red text-center font-mono"
-                    />
+                  <div className="flex flex-col gap-3 border-t border-zinc-900/60 pt-2.5">
+                    {/* Quick Quantity Calculator Helper */}
+                    <div className="flex flex-col gap-1">
+                      <label className="font-gaming text-[10px] text-amber-400 uppercase font-semibold">
+                        เครื่องมือช่วยคำนวณจำนวนด่วน (เช่น 190, 195, 200 หรือ 190-200 หรือ 195)
+                      </label>
+                      <Input
+                        type="text"
+                        placeholder="ตัวอย่าง: 190 195 200 หรือ 190-200"
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          const numbers = val.replace(/[-]/g, " ")
+                            .split(/[,\s]+/)
+                            .map(n => n.trim())
+                            .filter(n => n !== "" && !isNaN(Number(n)))
+                            .map(Number);
+
+                          if (numbers.length === 1) {
+                            const qty = String(numbers[0]);
+                            setFormLowQuantity(qty);
+                            setFormUnitQuantity(qty);
+                            setFormHighQuantity(qty);
+                          } else if (numbers.length === 2) {
+                            const min = Math.min(...numbers);
+                            const max = Math.max(...numbers);
+                            const avg = Math.round((min + max) / 2);
+                            setFormLowQuantity(String(min));
+                            setFormUnitQuantity(String(avg));
+                            setFormHighQuantity(String(max));
+                          } else if (numbers.length >= 3) {
+                            const min = Math.min(...numbers);
+                            const max = Math.max(...numbers);
+                            const sorted = [...numbers].sort((a, b) => a - b);
+                            const mid = sorted[Math.floor(sorted.length / 2)];
+                            setFormLowQuantity(String(min));
+                            setFormUnitQuantity(String(mid));
+                            setFormHighQuantity(String(max));
+                          }
+                        }}
+                        className="bg-black/50 border-zinc-800 text-xs focus:border-amber-500 font-mono"
+                      />
+                    </div>
+
+                    {/* 3 Quantity Inputs Grid */}
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="flex flex-col gap-1">
+                        <label className="font-gaming text-[10px] text-zinc-400 uppercase font-semibold">จำนวนต่ำสุด</label>
+                        <Input
+                          type="number"
+                          value={formLowQuantity}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setFormLowQuantity(val);
+                            // Auto update avg if high is also present
+                            if (val && formHighQuantity) {
+                              const avg = Math.round((Number(val) + Number(formHighQuantity)) / 2);
+                              setFormUnitQuantity(String(avg));
+                            }
+                          }}
+                          placeholder="ต่ำสุด"
+                          required
+                          min="1"
+                          className="bg-black/50 border-zinc-800 text-xs focus:border-game-red text-center font-mono text-amber-400"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <label className="font-gaming text-[10px] text-zinc-400 uppercase font-semibold">จำนวนที่ได้ (เฉลี่ย)</label>
+                        <Input
+                          type="number"
+                          value={formUnitQuantity}
+                          onChange={(e) => setFormUnitQuantity(e.target.value)}
+                          placeholder="เฉลี่ย"
+                          required
+                          min="1"
+                          className="bg-black/50 border-zinc-800 text-xs focus:border-game-red text-center font-mono text-amber-300 font-bold"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <label className="font-gaming text-[10px] text-zinc-400 uppercase font-semibold">จำนวนสูงสุด</label>
+                        <Input
+                          type="number"
+                          value={formHighQuantity}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setFormHighQuantity(val);
+                            // Auto update avg if low is also present
+                            if (val && formLowQuantity) {
+                              const avg = Math.round((Number(formLowQuantity) + Number(val)) / 2);
+                              setFormUnitQuantity(String(avg));
+                            }
+                          }}
+                          placeholder="สูงสุด"
+                          required
+                          min="1"
+                          className="bg-black/50 border-zinc-800 text-xs focus:border-game-red text-center font-mono text-amber-400"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Live Unit Price Preview */}
                     {formAvgPrice && Number(formUnitQuantity) > 0 && (
-                      <span className="text-[10px] text-emerald-400 font-mono italic">
-                        💡 ตก{items.find(i => i.id === formItemId)?.category?.unit?.name || "ชิ้น"}ละ: {(Number(formAvgPrice) / Number(formUnitQuantity)).toLocaleString(undefined, { maximumFractionDigits: 2 })} บาท
-                      </span>
+                      <div className="p-2.5 bg-emerald-950/20 border border-emerald-900/40 rounded-lg flex flex-col gap-1 text-[11px] font-mono text-emerald-300">
+                        <div className="flex justify-between items-center">
+                          <span className="text-zinc-400">🔢 จำนวนที่ได้รับ:</span>
+                          <span className="font-bold text-amber-300">
+                            {Number(formLowQuantity) !== Number(formHighQuantity)
+                              ? `${Number(formLowQuantity).toLocaleString()} - ${Number(formHighQuantity).toLocaleString()} ชิ้น (เฉลี่ย ${Number(formUnitQuantity).toLocaleString()} ชิ้น)`
+                              : `${Number(formUnitQuantity).toLocaleString()} ชิ้น`}
+                          </span>
+                        </div>
+                        {formShowUnitPrice !== false && (
+                          <div className="flex justify-between items-center border-t border-emerald-900/40 pt-1 mt-0.5">
+                            <span className="text-zinc-400">💡 ราคาเฉลี่ยต่อชิ้น:</span>
+                            <span className="font-bold text-emerald-400">
+                              {Number(formLowQuantity) !== Number(formHighQuantity) || Number(formLowPrice) !== Number(formHighPrice)
+                                ? `${(Number(formLowPrice || formAvgPrice) / Math.max(1, Number(formHighQuantity || formUnitQuantity))).toFixed(3)} - ${(Number(formHighPrice || formAvgPrice) / Math.max(1, Number(formLowQuantity || formUnitQuantity))).toFixed(3)} บาท (เฉลี่ย ${(Number(formAvgPrice) / Number(formUnitQuantity)).toFixed(3)} บาท/ชิ้น)`
+                                : `ตกชิ้นละ ${(Number(formAvgPrice) / Number(formUnitQuantity)).toLocaleString(undefined, { maximumFractionDigits: 3 })} บาท`}
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
                 )}

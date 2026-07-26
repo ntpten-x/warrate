@@ -43,7 +43,10 @@ interface OverviewItem {
   // Bulk attributes
   isBulk: boolean;
   unitQuantity: number;
+  lowQuantity?: number;
+  highQuantity?: number;
   showUnitPrice: boolean;
+  is_use?: boolean;
 
   // Total Prices (lump sum package price)
   totalAvgPrice: number;
@@ -307,7 +310,7 @@ export default function Home() {
                   {/* Item Image */}
                   <div className="w-16 h-16 rounded bg-black/60 border border-zinc-800 flex items-center justify-center overflow-hidden shrink-0 group-hover:border-game-red transition-colors p-1 relative">
                     {isValidImageUrl(item.image_url) ? (
-                      <Image src={formatImageUrl(item.image_url)} alt={item.name} fill unoptimized sizes="64px" className="object-contain p-1" />
+                      <Image src={formatImageUrl(item.image_url)} alt={item.name} fill unoptimized sizes="64px" className="object-contain p-1" referrerPolicy="no-referrer" />
                     ) : (
                       <Skull className="w-4 h-4 text-zinc-700" />
                     )}
@@ -331,7 +334,7 @@ export default function Home() {
                           ? (item.avgPrice > 0 ? `${item.avgPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })} บ.` : "-")
                           : (item.totalAvgPrice > 0 ? `${item.totalAvgPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })} บ.` : "-")}
                       </span>
-                      {item.showUnitPrice !== false && item.avgPrice > 0 && (
+                      {item.totalAvgPrice > 0 && (
                         <span className={`text-[10px] font-bold ${item.trend >= 0 ? "text-emerald-400" : "text-red-400"}`}>
                           {item.trend >= 0 ? `▲ +${item.trend.toFixed(1)}%` : `▼ ${item.trend.toFixed(1)}%`}
                         </span>
@@ -469,9 +472,9 @@ export default function Home() {
                       {/* Image and Name */}
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-4">
-                          <div className="w-24 h-18 rounded bg-black/60 border border-zinc-800 flex items-center justify-center overflow-hidden shrink-0 group-hover:border-game-red transition-colors p-1.5 relative">
+                          <div className="w-20 h-14 rounded bg-black/60 border border-zinc-800 flex items-center justify-center overflow-hidden shrink-0 group-hover:border-game-red transition-colors p-1.5 relative">
                             {isValidImageUrl(item.image_url) ? (
-                              <Image src={formatImageUrl(item.image_url)} alt={item.name} fill unoptimized sizes="96px" className="object-contain p-1.5" />
+                              <Image src={formatImageUrl(item.image_url)} alt={item.name} fill unoptimized sizes="80px" className="object-contain p-1.5" referrerPolicy="no-referrer" />
                             ) : (
                               <Skull className="w-4 h-4 text-zinc-700" />
                             )}
@@ -491,7 +494,13 @@ export default function Home() {
                       {/* Quantity */}
                       <td className="px-6 py-6 text-center font-mono text-zinc-300">
                         {item.totalAvgPrice > 0 ? (
-                          <span>{item.isBulk ? item.unitQuantity : 1} {item.category?.unit?.name || "ชิ้น"}</span>
+                          <span>
+                            {item.isBulk
+                              ? (item.lowQuantity && item.highQuantity && item.lowQuantity !== item.highQuantity
+                                  ? `${item.lowQuantity} ~ ${item.highQuantity} ${item.category?.unit?.name || "ชิ้น"}`
+                                  : `${item.unitQuantity} ${item.category?.unit?.name || "ชิ้น"}`)
+                              : `1 ${item.category?.unit?.name || "ชิ้น"}`}
+                          </span>
                         ) : (
                           <span className="text-zinc-500">-</span>
                         )}
@@ -517,7 +526,7 @@ export default function Home() {
 
                       {/* 24h Trend */}
                       <td className="px-6 py-6 text-center font-mono text-sm">
-                        {item.showUnitPrice === false || item.avgPrice === 0 ? (
+                        {item.totalAvgPrice === 0 ? (
                           <span className="text-zinc-500">-</span>
                         ) : item.trend > 0 ? (
                           <span className="text-emerald-400 font-extrabold flex items-center justify-center gap-1">
@@ -565,9 +574,9 @@ export default function Home() {
                   <div className="w-6 h-6 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-[10px] font-mono text-zinc-500 font-bold shrink-0">
                     {(page - 1) * limit + idx + 1}
                   </div>
-                  <div className="w-14 h-11 rounded bg-black/60 border border-zinc-850 flex items-center justify-center overflow-hidden p-1 shrink-0 relative">
+                  <div className="w-12 h-12 rounded bg-black/60 border border-zinc-850 flex items-center justify-center overflow-hidden p-1 shrink-0 relative">
                     {isValidImageUrl(item.image_url) ? (
-                      <Image src={formatImageUrl(item.image_url)} alt={item.name} fill unoptimized sizes="56px" className="object-contain p-1" />
+                      <Image src={formatImageUrl(item.image_url)} alt={item.name} fill unoptimized sizes="48px" className="object-contain p-1" referrerPolicy="no-referrer" />
                     ) : (
                       <Skull className="w-3.5 h-3.5 text-zinc-700" />
                     )}
@@ -594,7 +603,13 @@ export default function Home() {
                   <div className="flex flex-col gap-0.5 min-w-0">
                     <span className="text-[9px] text-zinc-500 uppercase font-semibold truncate">จำนวน</span>
                     <span className="font-mono text-xs text-zinc-350 truncate">
-                      {item.totalAvgPrice > 0 ? `${item.isBulk ? item.unitQuantity : 1} ${item.category?.unit?.name || "ชิ้น"}` : "-"}
+                      {item.totalAvgPrice > 0
+                        ? (item.isBulk
+                            ? (item.lowQuantity && item.highQuantity && item.lowQuantity !== item.highQuantity
+                                ? `${item.lowQuantity}~${item.highQuantity} ${item.category?.unit?.name || "ชิ้น"}`
+                                : `${item.unitQuantity} ${item.category?.unit?.name || "ชิ้น"}`)
+                            : `1 ${item.category?.unit?.name || "ชิ้น"}`)
+                        : "-"}
                     </span>
                   </div>
                   <div className="flex flex-col gap-0.5 bg-emerald-500/5 rounded py-0.5 min-w-0">
@@ -612,7 +627,7 @@ export default function Home() {
                 </div>
 
                 {/* Bottom section: 24h Trend */}
-                {item.showUnitPrice !== false && item.avgPrice > 0 && (
+                {item.totalAvgPrice > 0 && (
                   <div className="flex justify-between items-center bg-black/40 border border-zinc-900/30 px-3 py-1.5 rounded text-[10px] font-mono">
                     <span className="text-zinc-500 uppercase font-semibold font-gaming truncate">เทรนด์ 24h</span>
                     {item.trend > 0 ? (
@@ -653,7 +668,7 @@ export default function Home() {
               <div className="flex items-center gap-3">
                 <div className="w-20 h-16 rounded bg-black/80 border border-zinc-800 flex items-center justify-center overflow-hidden p-1 shrink-0 relative">
                   {isValidImageUrl(selectedItem.image_url) ? (
-                    <Image src={formatImageUrl(selectedItem.image_url)} alt={selectedItem.name} fill unoptimized sizes="80px" className="object-contain p-1" />
+                    <Image src={formatImageUrl(selectedItem.image_url)} alt={selectedItem.name} fill unoptimized sizes="80px" className="object-contain p-1" referrerPolicy="no-referrer" />
                   ) : (
                     <Skull className="w-4 h-4 text-zinc-700" />
                   )}
@@ -691,7 +706,11 @@ export default function Home() {
                     <Package className="w-4 h-4" /> เรทการซื้อขาย
                   </span>
                   <span className="font-mono text-center sm:text-right w-full sm:w-auto">
-                    จำนวน : {selectedItem.unitQuantity} {selectedItem.category?.unit?.name || "ชิ้น"}{selectedItem.showUnitPrice !== false && ` | เฉลี่ยตก${selectedItem.category?.unit?.name || "ชิ้น"}ละ: ${selectedItem.avgPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })} บาท`}
+                    จำนวน :{" "}
+                    {selectedItem.lowQuantity && selectedItem.highQuantity && selectedItem.lowQuantity !== selectedItem.highQuantity
+                      ? `${selectedItem.lowQuantity.toLocaleString()} ~ ${selectedItem.highQuantity.toLocaleString()} ${selectedItem.category?.unit?.name || "ชิ้น"} (เฉลี่ย ${selectedItem.unitQuantity.toLocaleString()} ${selectedItem.category?.unit?.name || "ชิ้น"})`
+                      : `${selectedItem.unitQuantity.toLocaleString()} ${selectedItem.category?.unit?.name || "ชิ้น"}`}
+                    {selectedItem.showUnitPrice !== false && ` | เฉลี่ยตก${selectedItem.category?.unit?.name || "ชิ้น"}ละ: ${selectedItem.avgPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })} บาท`}
                   </span>
                 </div>
               )}
@@ -707,7 +726,7 @@ export default function Home() {
                       ? (selectedItem.avgPrice > 0 ? `${selectedItem.avgPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })} บ.` : "-")
                       : (selectedItem.totalAvgPrice > 0 ? `${selectedItem.totalAvgPrice.toLocaleString()} บ.` : "-")}
                   </span>
-                  {selectedItem.showUnitPrice !== false && selectedItem.avgPrice > 0 && (
+                  {selectedItem.totalAvgPrice > 0 && (
                     <span className={`text-[9px] sm:text-[10px] font-bold ${selectedItem.trend >= 0 ? "text-emerald-400" : "text-red-400"} truncate`}>
                       {selectedItem.trend >= 0 ? `▲ +${selectedItem.trend.toFixed(1)}%` : `▼ ${selectedItem.trend.toFixed(1)}%`}
                     </span>
