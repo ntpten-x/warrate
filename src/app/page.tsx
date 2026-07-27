@@ -714,11 +714,9 @@ export default function Home() {
                   <span className="flex items-center gap-1.5 font-gaming uppercase tracking-wider text-emerald-400 shrink-0">
                     ⭐ ราคาขายยอดนิยม : <strong className="text-emerald-300 text-sm">{selectedItem.totalAvgPrice.toLocaleString()} บาท</strong>
                   </span>
-                  {selectedItem.totalLowPrice > 0 && selectedItem.totalHighPrice > 0 && (
+                  {selectedItem.totalLowPrice > 0 && selectedItem.totalHighPrice > 0 && selectedItem.totalLowPrice !== selectedItem.totalHighPrice && (
                     <span className="text-amber-300 text-center sm:text-right w-full sm:w-auto">
-                      📊 ช่วงราคาที่พบ: {selectedItem.totalLowPrice !== selectedItem.totalHighPrice
-                        ? `${selectedItem.totalLowPrice.toLocaleString()} - ${selectedItem.totalHighPrice.toLocaleString()} บาท`
-                        : `${selectedItem.totalAvgPrice.toLocaleString()} บาท`}
+                      📊 ช่วงราคาที่พบ: {selectedItem.totalLowPrice.toLocaleString()} - {selectedItem.totalHighPrice.toLocaleString()} บาท
                     </span>
                   )}
                 </div>
@@ -733,7 +731,7 @@ export default function Home() {
                   <span className="text-center sm:text-right w-full sm:w-auto">
                     จำนวน :{" "}
                     {selectedItem.lowQuantity && selectedItem.highQuantity && selectedItem.lowQuantity !== selectedItem.highQuantity
-                      ? `${selectedItem.lowQuantity.toLocaleString()} ~ ${selectedItem.highQuantity.toLocaleString()} ${selectedItem.category?.unit?.name || "ชิ้น"} (เฉลี่ย ${selectedItem.unitQuantity.toLocaleString()} ${selectedItem.category?.unit?.name || "ชิ้น"})`
+                      ? `${selectedItem.lowQuantity.toLocaleString()} ~ ${selectedItem.highQuantity.toLocaleString()} ${selectedItem.category?.unit?.name || "ชิ้น"}`
                       : `${selectedItem.unitQuantity.toLocaleString()} ${selectedItem.category?.unit?.name || "ชิ้น"}`}
                     {selectedItem.showUnitPrice !== false && ` | เฉลี่ยตก${selectedItem.category?.unit?.name || "ชิ้น"}ละ: ${selectedItem.avgPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })} บาท`}
                   </span>
