@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { parseClientError } from "@/lib/error";
 import { fillMissingDatesAndGroup } from "@/lib/chartUtils";
+import { parsePriceRangeString, formatPriceRangeText } from "@/lib/priceUtils";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -89,6 +90,10 @@ function PricesContent() {
   const [formRecordedAt, setFormRecordedAt] = useState("");
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+
+  // Price Mode Selector: "exact" (1:1 ราคาเจาะจง) vs "range" (ช่วงราคาประมาณ Min-Max)
+  const [priceMode, setPriceMode] = useState<"exact" | "range">("range");
+  const [lastAddedItemId, setLastAddedItemId] = useState<string>("");
 
   // Price warning state (if price deviates > 50% from previous entry)
   const [showDeviationWarning, setShowDeviationWarning] = useState(false);
@@ -191,6 +196,7 @@ function PricesContent() {
         setFormUnitQuantity("1");
         setFormIsBulk(false);
         setFormShowUnitPrice(false);
+        setPriceMode("range");
         setFormError(null);
         setShowDeviationWarning(false);
         setModalOpen(true);
@@ -257,7 +263,11 @@ function PricesContent() {
   // Trigger form state for Create
   const handleOpenAdd = () => {
     setEditingPrice(null);
-    setFormItemId(items[0]?.id || "");
+    const defaultItemId = lastAddedItemId
+      || (prices.length > 0 ? (prices[0]?.item?.id || (prices[0] as any)?.item_id) : "")
+      || (items.length > 0 ? items[0]?.id : "")
+      || "";
+    setFormItemId(defaultItemId);
     setFormLowPrice("");
     setFormHighPrice("");
     setFormAvgPrice("");
@@ -274,6 +284,7 @@ function PricesContent() {
       .toISOString()
       .slice(0, 16);
     setFormRecordedAt(formattedDate);
+    setPriceMode("range");
     setFormError(null);
     setShowDeviationWarning(false);
     setModalOpen(true);
@@ -299,7 +310,8 @@ function PricesContent() {
     const formattedDate = new Date(recordDate.getTime() - recordDate.getTimezoneOffset() * 60000)
       .toISOString()
       .slice(0, 16);
-    setFormRecordedAt(formattedDate);
+    const isExact = record.lowPrice === record.highPrice;
+    setPriceMode(isExact ? "exact" : "range");
 
     setFormError(null);
     setShowDeviationWarning(false);
@@ -329,18 +341,42 @@ function PricesContent() {
   // Submit Handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formItemId || !formLowPrice || !formHighPrice || !formAvgPrice || !formSource) {
-      setFormError("กรุณาระบุข้อมูลราคาและแหล่งที่มาอ้างอิงให้ครบถ้วน");
+    setFormError(null);
+
+    if (!formItemId || !formAvgPrice || !formSource) {
+      setFormError("กรุณาระบุไอเทม ราคาขาย และแหล่งอ้างอิงให้ครบถ้วน");
       return;
     }
 
-    const low = Number(formLowPrice);
-    const high = Number(formHighPrice);
-    const avg = Number(formAvgPrice);
-
-    if (low > avg || avg > high) {
-      setFormError("กฎธุรกิจราคา: ราคาต่ำสุด (Low) <= ราคากลาง (Avg) <= ราคาสูงสุด (High)");
+    if (priceMode === "range" && (!formLowPrice || !formHighPrice)) {
+      setFormError("กรุณาระบุช่วงราคาต่ำสุดและสูงสุดสำหรับแบบราคาประมาณให้ครบถ้วน");
       return;
+    }
+
+    const avg = Number(formAvgPrice);
+    const low = priceMode === "exact" ? avg : Number(formLowPrice);
+    const high = priceMode === "exact" ? avg : Number(formHighPrice);
+
+    if (isNaN(low) || isNaN(high) || isNaN(avg)) {
+      setFormError("กรุณาระบุตัวเลขราคาที่ถูกต้อง");
+      return;
+    }
+
+    if (low < 0 || high < 0 || avg < 0) {
+      setFormError("ราคาต้องไม่ติดลบ (ต้องมีค่ามากกว่าหรือเท่ากับ 0 บาท)");
+      return;
+    }
+
+    // Business Logic Validation for Price Ranges
+    if (priceMode === "range") {
+      if (low > high) {
+        setFormError(`ช่วงราคาไม่ถูกต้อง: ราคาประมาณต่ำสุด (${low} บ.) ต้องไม่มากกว่าราคาสูงสุด (${high} บ.)`);
+        return;
+      }
+      if (avg < low || avg > high) {
+        setFormError(`ราคาขายยอดนิยม (${avg} บ.) ต้องอยู่ภายในช่วงราคาประมาณต่ำสุด (${low} บ.) และสูงสุด (${high} บ.)`);
+        return;
+      }
     }
 
     const avgQty = Number(formUnitQuantity || 1);
@@ -417,9 +453,11 @@ function PricesContent() {
         });
 
         if (!res.ok) throw res;
+        setLastAddedItemId(formItemId);
         toast.success("บันทึกราคาใหม่สำเร็จ!");
       }
 
+      setLastAddedItemId(formItemId);
       setModalOpen(false);
       fetchPrices();
       if (formItemId === filterItemId) {
@@ -722,23 +760,23 @@ function PricesContent() {
           <Card className="hidden md:block bg-neutral-950/80 border-zinc-800/80 text-white shadow-lg backdrop-blur-sm overflow-hidden">
             <CardContent className="p-0 overflow-x-auto">
               <table className="w-full text-sm text-left">
-                <thead className="text-[11px] text-zinc-500 uppercase font-semibold bg-neutral-900/40 border-b border-zinc-900/40">
+                <thead className="text-[11px] text-zinc-400 uppercase font-gaming font-semibold bg-neutral-900/80 border-b border-zinc-800 tracking-wider">
                   <tr>
-                    <th className="px-6 py-4 w-12">#</th>
-                    <th className="px-6 py-4">ไอเทม</th>
-                    <th className="px-6 py-4 text-center">ราคาต่ำสุด</th>
-                    <th className="px-6 py-4 text-center">ราคาขาย</th>
-                    <th className="px-6 py-4 text-center">ราคาสูงสุด</th>
-                    <th className="px-6 py-4">แหล่งอ้างอิง</th>
-                    <th className="px-6 py-4">หมายเหตุ</th>
-                    <th className="px-6 py-4">วันที่บันทึก</th>
-                    <th className="px-6 py-4 text-center">จัดการ</th>
+                    <th className="px-5 py-3.5 w-12">#</th>
+                    <th className="px-5 py-3.5">ไอเทม</th>
+                    <th className="px-5 py-3.5 text-center text-red-400">ช่วงราคาต่ำสุด</th>
+                    <th className="px-5 py-3.5 text-center text-emerald-400 font-extrabold">⭐ ราคาขาย (ยอดนิยม)</th>
+                    <th className="px-5 py-3.5 text-center text-blue-400">ช่วงราคาสูงสุด</th>
+                    <th className="px-5 py-3.5">แหล่งอ้างอิง</th>
+                    <th className="px-5 py-3.5">หมายเหตุ</th>
+                    <th className="px-5 py-3.5">วันที่บันทึก</th>
+                    <th className="px-5 py-3.5 text-center">จัดการ</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-900/40 font-medium text-xs">
+                <tbody className="divide-y divide-zinc-800/60 font-medium text-xs">
                   {prices.map((record, idx) => (
-                    <tr key={record.id} className="hover:bg-zinc-900/20 transition-colors">
-                      <td className="px-6 py-4 font-mono text-[11px] text-zinc-500 font-bold">{(page - 1) * limit + idx + 1}</td>
+                    <tr key={record.id} className="hover:bg-zinc-900/60 transition-colors">
+                      <td className="px-5 py-4 font-mono text-[11px] text-zinc-500 font-bold">{(page - 1) * limit + idx + 1}</td>
                       <td className="px-6 py-4">
                         <div className="flex flex-col gap-0.5">
                           <span className="font-gaming text-zinc-100 font-bold tracking-wide">{record.item?.name}</span>
@@ -766,9 +804,22 @@ function PricesContent() {
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-center font-mono text-red-400 font-bold">{record.lowPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })} บาท</td>
-                      <td className="px-6 py-4 text-center font-mono text-game-green font-extrabold">{record.avgPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })} บาท</td>
-                      <td className="px-6 py-4 text-center font-mono text-blue-400 font-bold">{record.highPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })} บาท</td>
+                      <td className="px-5 py-4 font-mono text-red-400 font-bold text-center">
+                        {record.lowPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })} บาท
+                      </td>
+                      <td className="px-5 py-4 text-center font-mono text-game-green font-extrabold">
+                        <div className="flex flex-col items-center">
+                          <span>{record.avgPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })} บาท</span>
+                          {record.lowPrice !== record.highPrice && (
+                            <span className="text-[10px] text-amber-300 font-normal">
+                              ประมาณ {record.lowPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })} - {record.highPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })} บ.
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-5 py-4 font-mono text-blue-400 font-bold text-center">
+                        {record.highPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })} บาท
+                      </td>
                       <td className="px-6 py-4">
                         <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-zinc-900 border border-zinc-800 text-zinc-400">
                           {record.source}
@@ -838,19 +889,19 @@ function PricesContent() {
                 {/* Middle details: low, avg, high price */}
                 <div className="grid grid-cols-3 gap-2 border-t border-zinc-900/60 pt-2.5 text-center text-xs">
                   <div className="flex flex-col gap-0.5 min-w-0">
-                    <span className="text-[9px] text-zinc-500 uppercase font-semibold truncate">ต่ำสุด</span>
+                    <span className="text-[9px] text-red-400 uppercase font-semibold truncate">ช่วงต่ำสุด</span>
                     <span className="text-red-400 font-mono font-bold text-xs truncate">
                       {record.lowPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })} บ.
                     </span>
                   </div>
-                  <div className="flex flex-col gap-0.5 min-w-0 bg-emerald-500/5 rounded py-0.5">
-                    <span className="text-[9px] text-emerald-500 uppercase font-semibold truncate">ราคาขาย</span>
+                  <div className="flex flex-col gap-0.5 min-w-0 bg-emerald-500/10 border border-emerald-900/30 rounded py-0.5">
+                    <span className="text-[9px] text-emerald-400 uppercase font-extrabold truncate">⭐ ราคาขาย</span>
                     <span className="text-game-green font-mono font-extrabold text-xs truncate">
                       {record.avgPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })} บ.
                     </span>
                   </div>
                   <div className="flex flex-col gap-0.5 min-w-0">
-                    <span className="text-[9px] text-zinc-500 uppercase font-semibold truncate">สูงสุด</span>
+                    <span className="text-[9px] text-blue-400 uppercase font-semibold truncate">ช่วงสูงสุด</span>
                     <span className="text-blue-400 font-mono font-bold text-xs truncate">
                       {record.highPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })} บ.
                     </span>
@@ -912,11 +963,11 @@ function PricesContent() {
       {/* FORM MODAL (Add / Edit) */}
       {modalOpen && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg bg-neutral-950 border border-zinc-800 shadow-2xl rounded-lg overflow-hidden animate-[pulse-glow-red_4s_infinite] relative">
-            <div className="h-[3px] w-full bg-gradient-to-r from-transparent via-game-red to-transparent" />
+          <div className="w-full max-w-lg bg-neutral-950 border border-zinc-800 shadow-2xl rounded-lg overflow-hidden animate-[pulse-glow-red_4s_infinite] relative max-h-[90vh] flex flex-col">
+            <div className="h-[3px] w-full bg-gradient-to-r from-transparent via-game-red to-transparent shrink-0" />
 
-            <div className="p-5 border-b border-zinc-900 flex justify-between items-center">
-              <h3 className="font-gaming font-extrabold text-md tracking-wider uppercase text-white">
+            <div className="p-4 sm:p-5 border-b border-zinc-900 flex justify-between items-center shrink-0">
+              <h3 className="font-gaming font-extrabold text-sm sm:text-md tracking-wider uppercase text-white">
                 {editingPrice ? "แก้ไขเรทราคาไอเทม" : "เพิ่มเรทราคาไอเทม"}
               </h3>
               <button onClick={() => setModalOpen(false)} className="text-zinc-500 hover:text-white">
@@ -924,7 +975,7 @@ function PricesContent() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-5 flex flex-col gap-4 text-left">
+            <form onSubmit={handleSubmit} className="p-4 sm:p-5 flex flex-col gap-4 text-left overflow-y-auto max-h-[80vh]">
               {formError && (
                 <div className="text-xs text-red-400 bg-red-950/20 border border-red-900/40 p-2.5 rounded">
                   ⚠️ {formError}
@@ -952,7 +1003,7 @@ function PricesContent() {
               {/* Item selection and template copy button in one row */}
               <div className="flex flex-col gap-1.5">
                 <label className="font-gaming text-[11px] text-zinc-400 uppercase font-semibold">เลือกไอเทม</label>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <select
                     value={formItemId}
                     onChange={(e) => {
@@ -972,7 +1023,7 @@ function PricesContent() {
                     <Button
                       type="button"
                       onClick={handleCopyLatest}
-                      className="bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-xs px-3 py-1 flex items-center gap-1"
+                      className="bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-xs px-3 py-1 flex items-center justify-center gap-1 shrink-0"
                       title="คัดลอกข้อมูลราคาล่าสุดเพื่อแก้ไขด่วน"
                     >
                       <Copy className="w-3.5 h-3.5" /> คัดลอกข้อมูลล่าสุด
@@ -1059,7 +1110,7 @@ function PricesContent() {
                     </div>
 
                     {/* 3 Quantity Inputs Grid */}
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                       <div className="flex flex-col gap-1">
                         <label className="font-gaming text-[10px] text-zinc-400 uppercase font-semibold">จำนวนต่ำสุด</label>
                         <Input
@@ -1141,103 +1192,178 @@ function PricesContent() {
                 )}
               </div>
 
-              {/* Quick Calculator Helper */}
-              <div className="flex flex-col gap-1.5 p-3.5 bg-blue-950/10 border border-blue-900/30 rounded-lg">
-                <label className="font-gaming text-[10px] text-blue-400 uppercase font-semibold">
-                  เครื่องมือช่วยคำนวณราคาด่วน (ป้อนราคาเดี่ยว หรือหลายราคาคั่นด้วยจุลภาค)
+              {/* Price Entry Mode Box Selector */}
+              <div className="flex flex-col gap-2 p-3 bg-black/50 rounded-lg border border-zinc-850">
+                <label className="font-gaming text-[11px] text-zinc-300 uppercase font-semibold flex items-center justify-between">
+                  <span>เลือกรูปแบบการกำหนดราคา</span>
+                  <span className="text-[10px] text-zinc-500 font-mono">
+                    {priceMode === "exact" ? "🎯 ราคาเจาะจง 1 : 1" : "📊 ช่วงราคาประมาณ (Min ~ Max)"}
+                  </span>
                 </label>
-                <Input
-                  type="text"
-                  placeholder="ตัวอย่าง: 100 หรือ 90, 100, 110"
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    const parsed = val.split(/[,\s]+/)
-                      .map(n => n.trim())
-                      .filter(n => n !== "" && !isNaN(Number(n)))
-                      .map(Number);
-                    
-                    if (parsed.length > 0) {
-                      if (parsed.length === 1) {
-                        const newPrice = parsed[0];
-                        // If single price is provided, use recent history to find the realistic bounds
-                        const recentAvgs = recentPricesCache.map(p => p.avgPrice);
-                        const min = Math.min(newPrice, ...recentAvgs);
-                        const max = Math.max(newPrice, ...recentAvgs);
-                        
-                        setFormLowPrice(String(min));
-                        setFormHighPrice(String(max));
-                        setFormAvgPrice(String(newPrice));
-                      } else {
-                        const min = Math.min(...parsed);
-                        const max = Math.max(...parsed);
-                        const sum = parsed.reduce((a, b) => a + b, 0);
-                        const avg = Number((sum / parsed.length).toFixed(2));
-                        
-                        setFormLowPrice(String(min));
-                        setFormHighPrice(String(max));
-                        setFormAvgPrice(String(avg));
+
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPriceMode("range");
+                      setFormError(null);
+                    }}
+                    className={`py-2 px-3 rounded-md text-xs font-gaming font-bold flex items-center justify-center gap-1.5 transition-all border ${
+                      priceMode === "range"
+                        ? "bg-game-red border-red-500 text-white shadow-[0_0_12px_rgba(198,40,40,0.4)]"
+                        : "bg-black/60 border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700"
+                    }`}
+                  >
+                    📊 ช่วงราคาประมาณ (Min - Max)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPriceMode("exact");
+                      if (formAvgPrice) {
+                        setFormLowPrice(formAvgPrice);
+                        setFormHighPrice(formAvgPrice);
                       }
-                      setShowDeviationWarning(false);
-                    }
-                  }}
-                  className="bg-black/50 border-zinc-800 text-xs focus:border-blue-500 font-mono"
-                />
-                <span className="text-[9px] text-zinc-550 leading-normal">
-                  * ป้อนราคาเดี่ยวเพื่อกำหนดราคาเดียวทั้งหมด หรือป้อนหลายราคาคั่นด้วยคอมมา/เว้นวรรคเพื่อระบบหา ต่ำสุด/เฉลี่ย/สูงสุด ให้อัตโนมัติ
-                </span>
+                      setFormError(null);
+                    }}
+                    className={`py-2 px-3 rounded-md text-xs font-gaming font-bold flex items-center justify-center gap-1.5 transition-all border ${
+                      priceMode === "exact"
+                        ? "bg-game-red border-red-500 text-white shadow-[0_0_12px_rgba(198,40,40,0.4)]"
+                        : "bg-black/60 border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700"
+                    }`}
+                  >
+                    🎯 ราคาเจาะจง (1 : 1)
+                  </button>
+                </div>
               </div>
 
-              {/* Prices Inputs low / avg / high */}
-              <div className="grid grid-cols-3 gap-3">
-                <div className="flex flex-col gap-1.5">
-                  <label className="font-gaming text-[11px] text-zinc-400 uppercase font-semibold">ราคาต่ำสุด</label>
-                  <Input
-                    type="number"
-                    step="any"
-                    value={formLowPrice}
-                    onChange={(e) => {
-                      setFormLowPrice(e.target.value);
-                      setShowDeviationWarning(false);
-                    }}
-                    placeholder="บาท"
-                    required
-                    min="0"
-                    className="bg-black/50 border-zinc-800 text-xs text-center font-mono text-red-400 focus:border-game-red"
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="font-gaming text-[11px] text-zinc-400 uppercase font-semibold">ราคาซื้อขาย</label>
+              {/* Exact Price (1:1) Inputs */}
+              {priceMode === "exact" ? (
+                <div className="flex flex-col gap-1.5 p-3.5 bg-emerald-950/10 border border-emerald-900/30 rounded-lg">
+                  <label className="font-gaming text-[11px] text-emerald-400 uppercase font-bold flex items-center justify-between">
+                    <span>⭐ ราคาขาย (บาท)</span>
+                    <span className="text-[10px] text-zinc-400 font-normal">เช่น ปืน 1 กระบอก ราคา 5 บาท</span>
+                  </label>
                   <Input
                     type="number"
                     step="any"
                     value={formAvgPrice}
                     onChange={(e) => {
-                      setFormAvgPrice(e.target.value);
+                      const val = e.target.value;
+                      setFormAvgPrice(val);
+                      setFormLowPrice(val);
+                      setFormHighPrice(val);
                       setShowDeviationWarning(false);
                     }}
-                    placeholder="บาท"
+                    placeholder="ป้อนราคาขาย เช่น 5"
                     required
                     min="0"
-                    className="bg-black/50 border-zinc-800 text-xs text-center font-mono text-game-green font-extrabold focus:border-game-red"
+                    className="bg-black/60 border-emerald-800/60 text-sm text-center font-mono text-game-green font-extrabold focus:border-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.1)]"
                   />
+                  <span className="text-[10px] text-zinc-400 font-mono">
+                    💡 รูปแบบราคาคงที่ 1 : 1 (บันทึกราคาซื้อขายคงที่โดยตรง)
+                  </span>
                 </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="font-gaming text-[11px] text-zinc-400 uppercase font-semibold">ราคาสูงสุด</label>
-                  <Input
-                    type="number"
-                    step="any"
-                    value={formHighPrice}
-                    onChange={(e) => {
-                      setFormHighPrice(e.target.value);
-                      setShowDeviationWarning(false);
-                    }}
-                    placeholder="บาท"
-                    required
-                    min="0"
-                    className="bg-black/50 border-zinc-800 text-xs text-center font-mono text-blue-400 focus:border-game-red"
-                  />
+              ) : (
+                /* Range Price Inputs */
+                <div className="flex flex-col gap-4">
+                  {/* Quick Price Range & Calculator Helper */}
+                  <div className="flex flex-col gap-1.5 p-3.5 bg-gradient-to-r from-blue-950/20 via-neutral-900 to-black border border-blue-900/40 rounded-lg">
+                    <label className="font-gaming text-[10px] text-blue-400 uppercase font-semibold flex items-center gap-1">
+                      ⚡ ป้อนช่วงราคาประมาณด่วน (เช่น พิมพ์ 10-13 หรือ 10 - 13)
+                    </label>
+                    <Input
+                      type="text"
+                      placeholder="ตัวอย่าง: 10-13 หรือ 10 - 13"
+                      onChange={(e) => {
+                        const parsed = parsePriceRangeString(e.target.value);
+                        if (parsed) {
+                          setFormLowPrice(String(parsed.low));
+                          setFormHighPrice(String(parsed.high));
+                          setFormAvgPrice(String(parsed.avg));
+                          setShowDeviationWarning(false);
+                        }
+                      }}
+                      className="bg-black/60 border-zinc-800 text-xs focus:border-blue-500 font-mono"
+                    />
+                    <span className="text-[9px] text-zinc-400 leading-normal">
+                      * พิมพ์ช่วงราคาเช่น <strong>10-13</strong> ระบบจะกำหนดช่วงราคาต่ำสุด 10 บาท ~ สูงสุด 13 บาท และปรับราคาขายยอดนิยมได้อิสระ
+                    </span>
+                  </div>
+
+                  {/* 3 Price Inputs: Low / Popular Selling Price (Main) / High */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="font-gaming text-[10px] text-red-400 uppercase font-semibold">📉 ช่วงราคาต่ำสุด</label>
+                      <Input
+                        type="number"
+                        step="any"
+                        value={formLowPrice}
+                        onChange={(e) => {
+                          setFormLowPrice(e.target.value);
+                          setShowDeviationWarning(false);
+                        }}
+                        placeholder="ต่ำสุด (เช่น 10)"
+                        required
+                        min="0"
+                        className="bg-black/50 border-zinc-800 text-xs text-center font-mono text-red-400 focus:border-game-red"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="font-gaming text-[10px] text-emerald-400 uppercase font-bold flex items-center justify-center gap-0.5">⭐ ราคาขายยอดนิยม</label>
+                      <Input
+                        type="number"
+                        step="any"
+                        value={formAvgPrice}
+                        onChange={(e) => {
+                          setFormAvgPrice(e.target.value);
+                          setShowDeviationWarning(false);
+                        }}
+                        placeholder="ตั้งเองได้ (เช่น 10, 11, 12, 13)"
+                        required
+                        min="0"
+                        className="bg-emerald-950/30 border-emerald-800/60 text-xs text-center font-mono text-game-green font-extrabold focus:border-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.1)]"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="font-gaming text-[10px] text-blue-400 uppercase font-semibold">📈 ช่วงราคาสูงสุด</label>
+                      <Input
+                        type="number"
+                        step="any"
+                        value={formHighPrice}
+                        onChange={(e) => {
+                          setFormHighPrice(e.target.value);
+                          setShowDeviationWarning(false);
+                        }}
+                        placeholder="สูงสุด (เช่น 13)"
+                        required
+                        min="0"
+                        className="bg-black/50 border-zinc-800 text-xs text-center font-mono text-blue-400 focus:border-game-red"
+                      />
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* Realtime Live Preview Card */}
+              {formAvgPrice && (
+                <div className="p-3 bg-gradient-to-r from-emerald-950/30 via-neutral-900 to-black border border-emerald-900/40 rounded-lg flex flex-col gap-1 text-xs font-mono">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+                    <span className="text-zinc-400 text-[10px] font-semibold uppercase">🔍 แสดงผลตัวอย่างที่จะปรากฏในระบบ:</span>
+                    <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">
+                      ⭐ ราคาขายยอดนิยม: {Number(formAvgPrice).toLocaleString(undefined, { maximumFractionDigits: 2 })} บาท
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-zinc-300 mt-1">
+                    <span className="text-[11px]">📊 รูปแบบราคา:</span>
+                    <span className="font-bold text-amber-300 text-[11px]">
+                      {priceMode === "exact" || Number(formLowPrice) === Number(formHighPrice)
+                        ? `ราคาเจาะจง ${Number(formAvgPrice).toLocaleString(undefined, { maximumFractionDigits: 2 })} บาท`
+                        : `ประมาณ ${Number(formLowPrice).toLocaleString(undefined, { maximumFractionDigits: 2 })} - ${Number(formHighPrice).toLocaleString(undefined, { maximumFractionDigits: 2 })} บาท`}
+                    </span>
+                  </div>
+                </div>
+              )}
 
               {/* Source ( FB group / discord / etc) */}
               <div className="flex flex-col gap-1.5">

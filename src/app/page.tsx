@@ -447,27 +447,27 @@ export default function Home() {
           <Card className="hidden md:block bg-neutral-950/80 border-zinc-800/80 text-white shadow-lg backdrop-blur-sm overflow-hidden">
             <CardContent className="p-0 overflow-x-auto">
               <table className="w-full text-sm text-left">
-                <thead className="text-[12px] text-zinc-500 uppercase font-bold bg-neutral-900/40 border-b border-zinc-900/40">
+                <thead className="text-[11px] text-zinc-400 uppercase font-gaming font-semibold bg-neutral-900/80 border-b border-zinc-800 tracking-wider">
                   <tr>
-                    <th className="px-6 py-4 w-12">#</th>
-                    <th className="px-6 py-4">ไอเทม</th>
-                    <th className="px-6 py-4 text-center">จำนวน</th>
-                    <th className="px-6 py-4 text-center text-emerald-400">ราคาขาย</th>
-                    <th className="px-6 py-4 text-center">ราคาเฉลี่ยชิ้นละ</th>
-                    <th className="px-6 py-4 text-center">24h Trend</th>
-                    <th className="px-6 py-4 text-center">7D Chart</th>
-                    <th className="px-6 py-4 text-center w-16"></th>
+                    <th className="px-5 py-3.5 w-12">#</th>
+                    <th className="px-5 py-3.5">ไอเทม</th>
+                    <th className="px-5 py-3.5 text-center">จำนวน</th>
+                    <th className="px-5 py-3.5 text-center text-emerald-400 font-extrabold">⭐ ราคาขาย (ยอดนิยม)</th>
+                    <th className="px-5 py-3.5 text-center">ราคาเฉลี่ยชิ้นละ</th>
+                    <th className="px-5 py-3.5 text-center">24h Trend</th>
+                    <th className="px-5 py-3.5 text-center">7D Chart</th>
+                    <th className="px-5 py-3.5 text-center w-16"></th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-900/40 font-medium">
+                <tbody className="divide-y divide-zinc-800/60 font-medium">
                   {items.map((item, idx) => (
                     <tr
                       key={item.id}
                       onClick={() => handleRowClick(item)}
-                      className="hover:bg-zinc-900/40 cursor-pointer transition-colors group"
+                      className="hover:bg-zinc-900/60 cursor-pointer transition-colors group"
                     >
                       {/* Row Index */}
-                      <td className="px-6 py-6 font-mono text-xs text-zinc-500 font-bold">{(page - 1) * limit + idx + 1}</td>
+                      <td className="px-5 py-4 font-mono text-xs text-zinc-500 font-bold">{(page - 1) * limit + idx + 1}</td>
 
                       {/* Image and Name */}
                       <td className="px-6 py-4">
@@ -492,13 +492,13 @@ export default function Home() {
                       </td>
 
                       {/* Quantity */}
-                      <td className="px-6 py-6 text-center font-mono text-zinc-300">
+                      <td className="px-5 py-4 text-center font-mono text-zinc-300">
                         {item.totalAvgPrice > 0 ? (
                           <span>
                             {item.isBulk
                               ? (item.lowQuantity && item.highQuantity && item.lowQuantity !== item.highQuantity
-                                  ? `${item.lowQuantity} ~ ${item.highQuantity} ${item.category?.unit?.name || "ชิ้น"}`
-                                  : `${item.unitQuantity} ${item.category?.unit?.name || "ชิ้น"}`)
+                                ? `${item.lowQuantity} ~ ${item.highQuantity} ${item.category?.unit?.name || "ชิ้น"}`
+                                : `${item.unitQuantity} ${item.category?.unit?.name || "ชิ้น"}`)
                               : `1 ${item.category?.unit?.name || "ชิ้น"}`}
                           </span>
                         ) : (
@@ -506,17 +506,26 @@ export default function Home() {
                         )}
                       </td>
 
-                      {/* Selling Price */}
-                      <td className="px-6 py-6 text-center font-mono font-black text-base text-emerald-400 bg-emerald-500/5">
+                      {/* Selling Price (Popular Price & Estimated Range) */}
+                      <td className="px-5 py-4 text-center font-mono">
                         {item.totalAvgPrice > 0 ? (
-                          <span>{item.totalAvgPrice.toLocaleString()} บาท</span>
+                          <div className="flex flex-col items-center gap-0.5 justify-center">
+                            <span className="text-emerald-400 font-extrabold text-base">
+                              {item.totalAvgPrice.toLocaleString()} บาท
+                            </span>
+                            {item.totalLowPrice > 0 && item.totalHighPrice > 0 && item.totalLowPrice !== item.totalHighPrice && (
+                              <span className="text-[10px] text-amber-300 font-mono font-normal">
+                                ประมาณ {item.totalLowPrice.toLocaleString()} - {item.totalHighPrice.toLocaleString()} บ.
+                              </span>
+                            )}
+                          </div>
                         ) : (
                           <span className="text-zinc-500">-</span>
                         )}
                       </td>
 
                       {/* Avg Price per Piece */}
-                      <td className="px-6 py-6 text-center font-mono">
+                      <td className="px-5 py-4 text-center font-mono">
                         {item.showUnitPrice !== false && item.avgPrice > 0 ? (
                           <span className="text-amber-100 font-semibold">{item.avgPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })} บาท</span>
                         ) : (
@@ -525,7 +534,7 @@ export default function Home() {
                       </td>
 
                       {/* 24h Trend */}
-                      <td className="px-6 py-6 text-center font-mono text-sm">
+                      <td className="px-5 py-4 text-center font-mono text-sm">
                         {item.totalAvgPrice === 0 ? (
                           <span className="text-zinc-500">-</span>
                         ) : item.trend > 0 ? (
@@ -562,12 +571,12 @@ export default function Home() {
           </Card>
 
           {/* Mobile Card List */}
-          <div className="md:hidden flex flex-col gap-3 w-full px-3 pr-5">
+          <div className="md:hidden flex flex-col gap-3 w-full px-1 sm:px-2">
             {items.map((item, idx) => (
               <div
                 key={item.id}
                 onClick={() => handleRowClick(item)}
-                className="w-full overflow-hidden bg-neutral-950/70 border border-zinc-900/60 p-4 pr-5 rounded-lg flex flex-col gap-3 active:bg-zinc-900/40 transition-colors cursor-pointer text-left"
+                className="w-full overflow-hidden bg-neutral-950/70 border border-zinc-900/60 p-3.5 sm:p-4 rounded-lg flex flex-col gap-3 active:bg-zinc-900/40 transition-colors cursor-pointer text-left"
               >
                 {/* Top section: image, name, rank index */}
                 <div className="flex items-center gap-3">
@@ -605,10 +614,10 @@ export default function Home() {
                     <span className="font-mono text-xs text-zinc-350 truncate">
                       {item.totalAvgPrice > 0
                         ? (item.isBulk
-                            ? (item.lowQuantity && item.highQuantity && item.lowQuantity !== item.highQuantity
-                                ? `${item.lowQuantity}~${item.highQuantity} ${item.category?.unit?.name || "ชิ้น"}`
-                                : `${item.unitQuantity} ${item.category?.unit?.name || "ชิ้น"}`)
-                            : `1 ${item.category?.unit?.name || "ชิ้น"}`)
+                          ? (item.lowQuantity && item.highQuantity && item.lowQuantity !== item.highQuantity
+                            ? `${item.lowQuantity}~${item.highQuantity} ${item.category?.unit?.name || "ชิ้น"}`
+                            : `${item.unitQuantity} ${item.category?.unit?.name || "ชิ้น"}`)
+                          : `1 ${item.category?.unit?.name || "ชิ้น"}`)
                         : "-"}
                     </span>
                   </div>
@@ -660,11 +669,11 @@ export default function Home() {
       {/* DETAIL MODAL WITH RECHARTS GRAPHS */}
       {modalOpen && selectedItem && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-2xl bg-neutral-950 border border-zinc-800 shadow-2xl rounded-lg overflow-hidden animate-[pulse-glow-red_4s_infinite] relative">
-            <div className="h-[3px] w-full bg-gradient-to-r from-transparent via-game-red to-transparent" />
+          <div className="w-full max-w-2xl bg-neutral-950 border border-zinc-800 shadow-2xl rounded-lg overflow-hidden animate-[pulse-glow-red_4s_infinite] relative max-h-[90vh] flex flex-col">
+            <div className="h-[3px] w-full bg-gradient-to-r from-transparent via-game-red to-transparent shrink-0" />
 
             {/* Modal Header */}
-            <div className="p-5 border-b border-zinc-950 flex justify-between items-center text-left">
+            <div className="p-4 sm:p-5 border-b border-zinc-950 flex justify-between items-center text-left shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-20 h-16 rounded bg-black/80 border border-zinc-800 flex items-center justify-center overflow-hidden p-1 shrink-0 relative">
                   {isValidImageUrl(selectedItem.image_url) ? (
@@ -697,15 +706,31 @@ export default function Home() {
             </div>
 
             {/* Modal Content */}
-            <div className="p-6 flex flex-col gap-6 text-left">
+            <div className="p-4 sm:p-6 flex flex-col gap-5 sm:gap-6 text-left overflow-y-auto max-h-[80vh]">
+
+              {/* Estimated Price Range Banner */}
+              {selectedItem.totalAvgPrice > 0 && (
+                <div className="bg-gradient-to-r from-emerald-950/30 via-neutral-900 to-black border border-emerald-900/40 rounded p-3 text-xs flex flex-col sm:flex-row justify-between items-start sm:items-center text-emerald-300 font-semibold gap-2 w-full font-mono">
+                  <span className="flex items-center gap-1.5 font-gaming uppercase tracking-wider text-emerald-400 shrink-0">
+                    ⭐ ราคาขายยอดนิยม : <strong className="text-emerald-300 text-sm">{selectedItem.totalAvgPrice.toLocaleString()} บาท</strong>
+                  </span>
+                  {selectedItem.totalLowPrice > 0 && selectedItem.totalHighPrice > 0 && (
+                    <span className="text-amber-300 text-center sm:text-right w-full sm:w-auto">
+                      📊 ช่วงราคาที่พบ: {selectedItem.totalLowPrice !== selectedItem.totalHighPrice
+                        ? `${selectedItem.totalLowPrice.toLocaleString()} - ${selectedItem.totalHighPrice.toLocaleString()} บาท`
+                        : `${selectedItem.totalAvgPrice.toLocaleString()} บาท`}
+                    </span>
+                  )}
+                </div>
+              )}
 
               {/* Wholesale Alert banner if it is a bulk package */}
               {selectedItem.isBulk && (
-                <div className="bg-amber-950/20 border border-amber-900/30 rounded p-3 text-xs flex flex-col sm:flex-row justify-between items-start sm:items-center text-amber-400 font-semibold gap-2 w-full">
+                <div className="bg-amber-950/20 border border-amber-900/30 rounded p-3 text-xs flex flex-col sm:flex-row justify-between items-start sm:items-center text-amber-400 font-semibold gap-2 w-full font-mono">
                   <span className="flex items-center gap-1.5 font-gaming uppercase tracking-wider shrink-0">
                     <Package className="w-4 h-4" /> เรทการซื้อขาย
                   </span>
-                  <span className="font-mono text-center sm:text-right w-full sm:w-auto">
+                  <span className="text-center sm:text-right w-full sm:w-auto">
                     จำนวน :{" "}
                     {selectedItem.lowQuantity && selectedItem.highQuantity && selectedItem.lowQuantity !== selectedItem.highQuantity
                       ? `${selectedItem.lowQuantity.toLocaleString()} ~ ${selectedItem.highQuantity.toLocaleString()} ${selectedItem.category?.unit?.name || "ชิ้น"} (เฉลี่ย ${selectedItem.unitQuantity.toLocaleString()} ${selectedItem.category?.unit?.name || "ชิ้น"})`
@@ -718,8 +743,8 @@ export default function Home() {
               {/* Three column prices stats block (Unit Prices or Total Package Prices) */}
               <div className="grid grid-cols-3 gap-2 sm:gap-3 text-center">
                 <div className="bg-black/40 border border-zinc-900/60 rounded p-2 sm:p-3 flex flex-col gap-0.5 sm:gap-1 justify-center min-w-0">
-                  <span className="text-[9px] sm:text-[10px] text-zinc-500 uppercase font-gaming font-semibold truncate">
-                    {selectedItem.showUnitPrice !== false ? `ราคาต่อ${selectedItem.category?.unit?.name || "ชิ้น"}` : "ราคาขาย"}
+                  <span className="text-[9px] sm:text-[10px] text-emerald-400 uppercase font-gaming font-bold truncate">
+                    ⭐ ราคาขาย (ยอดนิยม)
                   </span>
                   <span className="font-mono text-xs sm:text-base md:text-lg font-extrabold text-emerald-400 truncate">
                     {selectedItem.showUnitPrice !== false
@@ -733,8 +758,8 @@ export default function Home() {
                   )}
                 </div>
                 <div className="bg-black/40 border border-zinc-900/60 rounded p-2 sm:p-3 flex flex-col gap-0.5 sm:gap-1 justify-center min-w-0">
-                  <span className="text-[9px] sm:text-[10px] text-zinc-500 uppercase font-gaming font-semibold truncate">
-                    {selectedItem.showUnitPrice !== false ? `ราคาสูงสุดต่อ${selectedItem.category?.unit?.name || "ชิ้น"}` : "ราคาสูงสุด"}
+                  <span className="text-[9px] sm:text-[10px] text-blue-400 uppercase font-gaming font-semibold truncate">
+                    {selectedItem.showUnitPrice !== false ? `ช่วงราคาสูงสุดต่อ${selectedItem.category?.unit?.name || "ชิ้น"}` : "ราคาสูงสุด"}
                   </span>
                   <span className="font-mono text-xs sm:text-base md:text-lg font-extrabold text-blue-400 truncate">
                     {selectedItem.showUnitPrice !== false
@@ -744,8 +769,8 @@ export default function Home() {
                   <span className="text-[8px] sm:text-[9px] text-zinc-500 truncate">สูงสุดที่พบ</span>
                 </div>
                 <div className="bg-black/40 border border-zinc-900/60 rounded p-2 sm:p-3 flex flex-col gap-0.5 sm:gap-1 justify-center min-w-0">
-                  <span className="text-[9px] sm:text-[10px] text-zinc-500 uppercase font-gaming font-semibold truncate">
-                    {selectedItem.showUnitPrice !== false ? `ราคาต่ำสุดต่อ${selectedItem.category?.unit?.name || "ชิ้น"}` : "ราคาต่ำสุด"}
+                  <span className="text-[9px] sm:text-[10px] text-red-400 uppercase font-gaming font-semibold truncate">
+                    {selectedItem.showUnitPrice !== false ? `ช่วงราคาต่ำสุดต่อ${selectedItem.category?.unit?.name || "ชิ้น"}` : "ราคาต่ำสุด"}
                   </span>
                   <span className="font-mono text-xs sm:text-base md:text-lg font-extrabold text-red-400 truncate">
                     {selectedItem.showUnitPrice !== false

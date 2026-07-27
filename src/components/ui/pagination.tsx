@@ -79,7 +79,7 @@ export function Pagination({
           variant="outline"
           onClick={() => onPageChange(1)}
           disabled={currentPage === 1}
-          className="w-8 h-8 bg-black/40 border-zinc-800/80 text-zinc-400 hover:text-white disabled:opacity-30 disabled:pointer-events-none hover:border-game-red transition-all"
+          className="w-8 h-8 bg-black/40 border-zinc-800/80 text-zinc-400 hover:bg-zinc-800 hover:text-white disabled:opacity-30 disabled:pointer-events-none hover:border-game-red transition-all"
           title="หน้าแรก"
         >
           <ChevronsLeft className="w-4 h-4" />
@@ -91,7 +91,7 @@ export function Pagination({
           variant="outline"
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className="w-8 h-8 bg-black/40 border-zinc-800/80 text-zinc-400 hover:text-white disabled:opacity-30 disabled:pointer-events-none hover:border-game-red transition-all"
+          className="w-8 h-8 bg-black/40 border-zinc-800/80 text-zinc-400 hover:bg-zinc-800 hover:text-white disabled:opacity-30 disabled:pointer-events-none hover:border-game-red transition-all"
           title="หน้าก่อนหน้า"
         >
           <ChevronLeft className="w-4 h-4" />
@@ -118,7 +118,7 @@ export function Pagination({
               className={`w-8 h-8 text-xs font-mono font-bold transition-all border ${
                 isActive
                   ? "bg-game-red hover:bg-game-red border-game-red text-white shadow-[0_0_10px_rgba(198,40,40,0.25)]"
-                  : "bg-black/30 border-zinc-800/60 text-zinc-400 hover:text-white hover:border-game-red"
+                  : "bg-black/30 border-zinc-800/60 text-zinc-400 hover:bg-zinc-800 hover:text-white hover:border-game-red"
               }`}
             >
               {pageNum}
@@ -132,7 +132,7 @@ export function Pagination({
           variant="outline"
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className="w-8 h-8 bg-black/40 border-zinc-800/80 text-zinc-400 hover:text-white disabled:opacity-30 disabled:pointer-events-none hover:border-game-red transition-all"
+          className="w-8 h-8 bg-black/40 border-zinc-800/80 text-zinc-400 hover:bg-zinc-800 hover:text-white disabled:opacity-30 disabled:pointer-events-none hover:border-game-red transition-all"
           title="หน้าถัดไป"
         >
           <ChevronRight className="w-4 h-4" />
@@ -144,7 +144,7 @@ export function Pagination({
           variant="outline"
           onClick={() => onPageChange(totalPages)}
           disabled={currentPage === totalPages}
-          className="w-8 h-8 bg-black/40 border-zinc-800/80 text-zinc-400 hover:text-white disabled:opacity-30 disabled:pointer-events-none hover:border-game-red transition-all"
+          className="w-8 h-8 bg-black/40 border-zinc-800/80 text-zinc-400 hover:bg-zinc-800 hover:text-white disabled:opacity-30 disabled:pointer-events-none hover:border-game-red transition-all"
           title="หน้าสุดท้าย"
         >
           <ChevronsRight className="w-4 h-4" />
